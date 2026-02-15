@@ -22,12 +22,14 @@
             overflow: hidden;
         }
         #game-container {
+            width: 100%;
+            max-width: 400px;
             transition: opacity 0.5s ease;
         }
         #word-display {
-            font-size: 2.5rem;
+            font-size: 1.8rem; /* Réduit pour mobile */
             margin-bottom: 40px;
-            letter-spacing: 15px;
+            letter-spacing: 10px; /* Réduit pour mobile */
         }
         input {
             background: #000;
@@ -42,7 +44,6 @@
             text-transform: uppercase;
             margin-bottom: 20px;
         }
-        /* Style quand l'input est désactivé (anti-spam) */
         input:disabled {
             border-color: #444;
             color: #444;
@@ -59,6 +60,7 @@
         }
         button:disabled {
             background: #444;
+            color: #888;
             cursor: not-allowed;
         }
         #reset-btn {
@@ -66,14 +68,15 @@
             color: #222;
             font-size: 0.4rem;
             margin-top: 50px;
+            border: none;
         }
         #message {
             margin-top: 25px;
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             color: #ff4444;
-            height: 20px;
+            height: 30px;
+            padding: 0 10px;
         }
-
         #final-screen {
             display: none;
             flex-direction: column;
@@ -82,12 +85,12 @@
             width: 90%;
         }
         #typewriter {
-            font-size: 1.2rem;
+            font-size: 1rem;
             line-height: 2;
             white-space: pre-wrap;
         }
         #typewriter span.big-ismac {
-            font-size: 3.5rem;
+            font-size: 2.5rem;
             display: block;
             margin-top: 20px;
             color: #fff;
@@ -95,16 +98,21 @@
         }
         .cursor {
             display: inline-block;
-            width: 15px;
-            height: 20px;
+            width: 10px;
+            height: 15px;
             background: #fff;
             animation: blink 0.7s infinite;
             vertical-align: middle;
         }
         @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
-
         .victory #game-container { display: none; }
         .victory #final-screen { display: flex; }
+
+        /* Ajustements petits écrans */
+        @media (max-width: 380px) {
+            #word-display { font-size: 1.4rem; letter-spacing: 5px; }
+            #typewriter span.big-ismac { font-size: 2rem; }
+        }
     </style>
 </head>
 <body>
@@ -123,6 +131,7 @@
     </div>
 
     <script>
+        // Ta configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCLUNQhx8h0dHmiI3rqJ6QPuDju0Aa4zAo",
             authDomain: "trailer-90acb.firebaseapp.com",
@@ -137,13 +146,24 @@
         const db = firebase.database();
         const SECRET_WORD = "ISMAC";
         let isAnimationStarted = false;
-        let isProcessing = false; // Variable pour empêcher le double clic
+        let isProcessing = false;
 
         const displayElement = document.getElementById('word-display');
         const inputElement = document.getElementById('letter-input');
         const btnElement = document.getElementById('validate-btn');
         const typewriterElement = document.getElementById('typewriter');
         const messageElement = document.getElementById('message');
+
+        // VERIFICATION AU CHARGEMENT : L'utilisateur a-t-il déjà trouvé une lettre ?
+        function checkStatus() {
+            if (localStorage.getItem('hasContributed') === 'true') {
+                inputElement.disabled = true;
+                btnElement.disabled = true;
+                inputElement.placeholder = "OK";
+                messageElement.style.color = "#00ff00";
+                messageElement.innerText = "TU AS DEJA APPORTE TA PIERRE !";
+            }
+        }
 
         function startTypewriter() {
             if (isAnimationStarted) return;
@@ -197,12 +217,13 @@
                 document.body.classList.remove('victory');
                 isAnimationStarted = false;
                 typewriterElement.innerHTML = "";
+                checkStatus(); // Vérifier le blocage local si le mot n'est pas fini
             }
         });
 
         const validate = () => {
-            // Si on est déjà en train de traiter une lettre, on stoppe
-            if (isProcessing) return;
+            // Sécurité anti-spam et déjà joué
+            if (isProcessing || localStorage.getItem('hasContributed') === 'true') return;
 
             const char = inputElement.value.toUpperCase();
             if (!char) return;
@@ -213,31 +234,44 @@
             btnElement.disabled = true;
 
             if (SECRET_WORD.includes(char)) {
-                // Bonne lettre
+                // BONNE LETTRE
                 for (let i = 0; i < SECRET_WORD.length; i++) {
                     if (SECRET_WORD[i] === char) db.ref("mot/" + i).set(true);
                 }
+                
+                // Enregistrement dans le navigateur du joueur
+                localStorage.setItem('hasContributed', 'true');
+                
                 messageElement.style.color = "#00ff00";
-                messageElement.innerText = "BIEN JOUE !";
+                messageElement.innerText = "BIEN JOUE ! TU AS CONTRIBUE.";
+                // On ne réactive pas l'input
             } else {
-                // Mauvaise lettre
+                // MAUVAISE LETTRE
                 messageElement.style.color = "#ff4444";
                 messageElement.innerText = "ERREUR";
-            }
 
-            // Délai de 1.5 seconde avant de pouvoir rejouer
-            setTimeout(() => {
-                isProcessing = false;
-                inputElement.disabled = false;
-                btnElement.disabled = false;
-                messageElement.innerText = "";
-                inputElement.focus();
-            }, 1500);
+                setTimeout(() => {
+                    isProcessing = false;
+                    inputElement.disabled = false;
+                    btnElement.disabled = false;
+                    messageElement.innerText = "";
+                    inputElement.focus();
+                }, 1500);
+            }
         };
 
         btnElement.onclick = validate;
         inputElement.onkeypress = (e) => { if (e.key === "Enter") validate(); };
-        document.getElementById('reset-btn').onclick = () => { if(confirm("Reset?")) db.ref("mot").remove(); };
+        
+        document.getElementById('reset-btn').onclick = () => { 
+            if(confirm("Admin : Reset total du mot ?")) {
+                db.ref("mot").remove();
+                localStorage.removeItem('hasContributed'); // Permet de retester
+                location.reload();
+            }
+        };
+
+        checkStatus();
     </script>
 </body>
 </html>
