@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mot Mystère - ISMAC</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
+        :root {
+            --bg-color: #000;
+            --text-color: #fff;
+            --accent-color: #5865F2; /* Bleu Discord */
+        }
+
         body {
-            background-color: #000;
-            color: #fff;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             font-family: 'Press Start 2P', cursive;
             display: flex;
             flex-direction: column;
@@ -20,22 +26,41 @@
             margin: 0;
             text-align: center;
             overflow: hidden;
+            transition: background 2s ease, font-family 1s ease;
         }
+
+        /* --- ANIMATION DE VICTOIRE (MODE MODERNE) --- */
+        body.victory {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            font-family: 'Inter', sans-serif; /* Police moderne */
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         #game-container {
             width: 100%;
             max-width: 400px;
-            transition: opacity 0.5s ease;
+            transition: all 0.5s ease;
         }
+
         #word-display {
-            font-size: 1.8rem; /* Réduit pour mobile */
+            font-size: 1.8rem;
             margin-bottom: 40px;
-            letter-spacing: 10px; /* Réduit pour mobile */
+            letter-spacing: 10px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
+
         input {
-            background: #000;
+            background: transparent;
             border: 4px solid #fff;
             color: #fff;
-            font-family: 'Press Start 2P', cursive;
+            font-family: inherit;
             font-size: 1.5rem;
             width: 60px;
             text-align: center;
@@ -43,75 +68,72 @@
             outline: none;
             text-transform: uppercase;
             margin-bottom: 20px;
+            transition: border-radius 1s ease;
         }
-        input:disabled {
-            border-color: #444;
-            color: #444;
-            cursor: not-allowed;
-        }
+
+        /* Quand on gagne, les bords deviennent lisses */
+        .victory input { border-radius: 50%; border-color: rgba(255,255,255,0.5); }
+
         button {
-            font-family: 'Press Start 2P', cursive;
+            font-family: inherit;
             padding: 15px 30px;
             border: none;
             cursor: pointer;
             background: #fff;
             color: #000;
             font-size: 0.8rem;
+            transition: all 0.5s ease;
         }
-        button:disabled {
-            background: #444;
-            color: #888;
-            cursor: not-allowed;
-        }
+
+        .victory button { border-radius: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
         #reset-btn {
             background: transparent;
-            color: #222;
+            color: rgba(255,255,255,0.2);
             font-size: 0.4rem;
             margin-top: 50px;
             border: none;
         }
+
         #message {
             margin-top: 25px;
-            font-size: 0.6rem;
-            color: #ff4444;
+            font-size: 0.7rem;
             height: 30px;
-            padding: 0 10px;
         }
+
+        /* --- ECRAN FINAL --- */
         #final-screen {
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             width: 90%;
+            z-index: 10;
         }
+
         #typewriter {
-            font-size: 1rem;
-            line-height: 2;
-            white-space: pre-wrap;
+            font-size: 1.5rem;
+            font-weight: 900;
+            line-height: 1.4;
+            text-transform: uppercase;
         }
+
         #typewriter span.big-ismac {
-            font-size: 2.5rem;
+            font-size: 4rem;
             display: block;
-            margin-top: 20px;
+            margin-top: 10px;
             color: #fff;
-            text-shadow: 4px 4px #5865F2;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.8));
         }
-        .cursor {
-            display: inline-block;
-            width: 10px;
-            height: 15px;
-            background: #fff;
-            animation: blink 0.7s infinite;
-            vertical-align: middle;
-        }
-        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
         .victory #game-container { display: none; }
         .victory #final-screen { display: flex; }
 
-        /* Ajustements petits écrans */
+        /* Ajustements mobiles */
         @media (max-width: 380px) {
-            #word-display { font-size: 1.4rem; letter-spacing: 5px; }
-            #typewriter span.big-ismac { font-size: 2rem; }
+            #word-display { font-size: 1.4rem; }
+            #typewriter span.big-ismac { font-size: 2.5rem; }
         }
     </style>
 </head>
@@ -131,7 +153,6 @@
     </div>
 
     <script>
-        // Ta configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCLUNQhx8h0dHmiI3rqJ6QPuDju0Aa4zAo",
             authDomain: "trailer-90acb.firebaseapp.com",
@@ -146,7 +167,6 @@
         const db = firebase.database();
         const SECRET_WORD = "ISMAC";
         let isAnimationStarted = false;
-        let isProcessing = false;
 
         const displayElement = document.getElementById('word-display');
         const inputElement = document.getElementById('letter-input');
@@ -154,18 +174,16 @@
         const typewriterElement = document.getElementById('typewriter');
         const messageElement = document.getElementById('message');
 
-        // VERIFICATION AU CHARGEMENT : L'utilisateur a-t-il déjà trouvé une lettre ?
         function checkStatus() {
-            if (localStorage.getItem('hasContributed') === 'true') {
+            if (localStorage.getItem('hasContributed') === 'true' && !document.body.classList.contains('victory')) {
                 inputElement.disabled = true;
                 btnElement.disabled = true;
-                inputElement.placeholder = "OK";
                 messageElement.style.color = "#00ff00";
-                messageElement.innerText = "TU AS DEJA APPORTE TA PIERRE !";
+                messageElement.innerText = "TU AS DEJA CONTRIBUE !";
             }
         }
 
-        function startTypewriter() {
+        function startVictoryAnimation() {
             if (isAnimationStarted) return;
             isAnimationStarted = true;
             
@@ -175,18 +193,18 @@
 
             function type() {
                 if (i < text1.length) {
-                    typewriterElement.innerHTML = text1.substring(0, i + 1) + '<span class="cursor"></span>';
+                    typewriterElement.innerHTML = text1.substring(0, i + 1);
                     i++;
-                    setTimeout(type, 100);
+                    setTimeout(type, 50);
                 } else {
-                    typewriterElement.innerHTML = text1 + '<br><span class="big-ismac"></span><span class="cursor"></span>';
+                    typewriterElement.innerHTML = text1 + '<br><span class="big-ismac"></span>';
                     let j = 0;
                     const bigSpan = typewriterElement.querySelector('.big-ismac');
                     function typeBig() {
                         if (j < text2.length) {
                             bigSpan.textContent += text2[j];
                             j++;
-                            setTimeout(typeBig, 200);
+                            setTimeout(typeBig, 150);
                         }
                     }
                     setTimeout(typeBig, 500);
@@ -212,65 +230,45 @@
 
             if (foundCount === SECRET_WORD.length) {
                 document.body.classList.add('victory');
-                startTypewriter();
+                setTimeout(startVictoryAnimation, 500);
             } else {
                 document.body.classList.remove('victory');
                 isAnimationStarted = false;
-                typewriterElement.innerHTML = "";
-                checkStatus(); // Vérifier le blocage local si le mot n'est pas fini
+                checkStatus();
             }
         });
 
         const validate = () => {
-            // Sécurité anti-spam et déjà joué
-            if (isProcessing || localStorage.getItem('hasContributed') === 'true') return;
+            if (localStorage.getItem('hasContributed') === 'true') return;
 
             const char = inputElement.value.toUpperCase();
             if (!char) return;
 
-            isProcessing = true;
             inputElement.value = "";
             inputElement.disabled = true;
-            btnElement.disabled = true;
 
             if (SECRET_WORD.includes(char)) {
-                // BONNE LETTRE
                 for (let i = 0; i < SECRET_WORD.length; i++) {
                     if (SECRET_WORD[i] === char) db.ref("mot/" + i).set(true);
                 }
-                
-                // Enregistrement dans le navigateur du joueur
                 localStorage.setItem('hasContributed', 'true');
-                
                 messageElement.style.color = "#00ff00";
-                messageElement.innerText = "BIEN JOUE ! TU AS CONTRIBUE.";
-                // On ne réactive pas l'input
+                messageElement.innerText = "BIEN JOUE !";
             } else {
-                // MAUVAISE LETTRE
                 messageElement.style.color = "#ff4444";
                 messageElement.innerText = "ERREUR";
-
                 setTimeout(() => {
-                    isProcessing = false;
                     inputElement.disabled = false;
-                    btnElement.disabled = false;
                     messageElement.innerText = "";
                     inputElement.focus();
-                }, 1500);
+                }, 1000);
             }
         };
 
         btnElement.onclick = validate;
         inputElement.onkeypress = (e) => { if (e.key === "Enter") validate(); };
+        document.getElementById('reset-btn').onclick = () => { if(confirm("Reset?")) { db.ref("mot").remove(); localStorage.removeItem('hasContributed'); location.reload(); }};
         
-        document.getElementById('reset-btn').onclick = () => { 
-            if(confirm("Admin : Reset total du mot ?")) {
-                db.ref("mot").remove();
-                localStorage.removeItem('hasContributed'); // Permet de retester
-                location.reload();
-            }
-        };
-
         checkStatus();
     </script>
 </body>
