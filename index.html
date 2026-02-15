@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mot Mystère - ISMAC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+            overflow: hidden;
+        }
+        #game-container {
+            transition: opacity 0.5s ease;
+        }
+        #word-display {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            letter-spacing: 15px;
+        }
+        input {
+            background: #000;
+            border: 4px solid #fff;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.5rem;
+            width: 60px;
+            text-align: center;
+            padding: 10px;
+            outline: none;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        /* Style quand l'input est désactivé (anti-spam) */
+        input:disabled {
+            border-color: #444;
+            color: #444;
+            cursor: not-allowed;
+        }
+        button {
+            font-family: 'Press Start 2P', cursive;
+            padding: 15px 30px;
+            border: none;
+            cursor: pointer;
+            background: #fff;
+            color: #000;
+            font-size: 0.8rem;
+        }
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+        }
+        #reset-btn {
+            background: transparent;
+            color: #222;
+            font-size: 0.4rem;
+            margin-top: 50px;
+        }
+        #message {
+            margin-top: 25px;
+            font-size: 0.7rem;
+            color: #ff4444;
+            height: 20px;
+        }
+
+        #final-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 90%;
+        }
+        #typewriter {
+            font-size: 1.2rem;
+            line-height: 2;
+            white-space: pre-wrap;
+        }
+        #typewriter span.big-ismac {
+            font-size: 3.5rem;
+            display: block;
+            margin-top: 20px;
+            color: #fff;
+            text-shadow: 4px 4px #5865F2;
+        }
+        .cursor {
+            display: inline-block;
+            width: 15px;
+            height: 20px;
+            background: #fff;
+            animation: blink 0.7s infinite;
+            vertical-align: middle;
+        }
+        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
+        .victory #game-container { display: none; }
+        .victory #final-screen { display: flex; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="word-display">_ _ _ _ _</div>
+        <input type="text" id="letter-input" maxlength="1" autofocus autocomplete="off">
+        <br>
+        <button id="validate-btn">VALIDER</button>
+        <div id="message"></div>
+        <button id="reset-btn">ADMIN RESET</button>
+    </div>
+
+    <div id="final-screen">
+        <div id="typewriter"></div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLUNQhx8h0dHmiI3rqJ6QPuDju0Aa4zAo",
+            authDomain: "trailer-90acb.firebaseapp.com",
+            databaseURL: "https://trailer-90acb-default-rtdb.firebaseio.com",
+            projectId: "trailer-90acb",
+            storageBucket: "trailer-90acb.firebasestorage.app",
+            messagingSenderId: "216077694665",
+            appId: "1:216077694665:web:e6090a278b656f7d2f7f18"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const SECRET_WORD = "ISMAC";
+        let isAnimationStarted = false;
+        let isProcessing = false; // Variable pour empêcher le double clic
+
+        const displayElement = document.getElementById('word-display');
+        const inputElement = document.getElementById('letter-input');
+        const btnElement = document.getElementById('validate-btn');
+        const typewriterElement = document.getElementById('typewriter');
+        const messageElement = document.getElementById('message');
+
+        function startTypewriter() {
+            if (isAnimationStarted) return;
+            isAnimationStarted = true;
+            
+            const text1 = "RENDEZ-VOUS SUR DISCORD POUR :";
+            const text2 = "ISMAC";
+            let i = 0;
+
+            function type() {
+                if (i < text1.length) {
+                    typewriterElement.innerHTML = text1.substring(0, i + 1) + '<span class="cursor"></span>';
+                    i++;
+                    setTimeout(type, 100);
+                } else {
+                    typewriterElement.innerHTML = text1 + '<br><span class="big-ismac"></span><span class="cursor"></span>';
+                    let j = 0;
+                    const bigSpan = typewriterElement.querySelector('.big-ismac');
+                    function typeBig() {
+                        if (j < text2.length) {
+                            bigSpan.textContent += text2[j];
+                            j++;
+                            setTimeout(typeBig, 200);
+                        }
+                    }
+                    setTimeout(typeBig, 500);
+                }
+            }
+            type();
+        }
+
+        db.ref("mot").on("value", (snapshot) => {
+            const data = snapshot.val() || {};
+            let display = "";
+            let foundCount = 0;
+
+            for (let i = 0; i < SECRET_WORD.length; i++) {
+                if (data[i] === true) {
+                    display += SECRET_WORD[i] + " ";
+                    foundCount++;
+                } else {
+                    display += "_ ";
+                }
+            }
+            displayElement.innerText = display.trim();
+
+            if (foundCount === SECRET_WORD.length) {
+                document.body.classList.add('victory');
+                startTypewriter();
+            } else {
+                document.body.classList.remove('victory');
+                isAnimationStarted = false;
+                typewriterElement.innerHTML = "";
+            }
+        });
+
+        const validate = () => {
+            // Si on est déjà en train de traiter une lettre, on stoppe
+            if (isProcessing) return;
+
+            const char = inputElement.value.toUpperCase();
+            if (!char) return;
+
+            isProcessing = true;
+            inputElement.value = "";
+            inputElement.disabled = true;
+            btnElement.disabled = true;
+
+            if (SECRET_WORD.includes(char)) {
+                // Bonne lettre
+                for (let i = 0; i < SECRET_WORD.length; i++) {
+                    if (SECRET_WORD[i] === char) db.ref("mot/" + i).set(true);
+                }
+                messageElement.style.color = "#00ff00";
+                messageElement.innerText = "BIEN JOUE !";
+            } else {
+                // Mauvaise lettre
+                messageElement.style.color = "#ff4444";
+                messageElement.innerText = "ERREUR";
+            }
+
+            // Délai de 1.5 seconde avant de pouvoir rejouer
+            setTimeout(() => {
+                isProcessing = false;
+                inputElement.disabled = false;
+                btnElement.disabled = false;
+                messageElement.innerText = "";
+                inputElement.focus();
+            }, 1500);
+        };
+
+        btnElement.onclick = validate;
+        inputElement.onkeypress = (e) => { if (e.key === "Enter") validate(); };
+        document.getElementById('reset-btn').onclick = () => { if(confirm("Reset?")) db.ref("mot").remove(); };
+    </script>
+</body>
+</html>
