@@ -4,22 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mot Mystère - ISMAC</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&family=Press+Start+2P&display=swap" rel="stylesheet">
+    
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
     <style>
-        /* --- VARIABLES --- */
         :root {
-            --bg-color: #000;
-            --text-color: #fff;
-            --font-pixel: 'Press Start 2P', cursive;
-            --font-modern: 'Inter', sans-serif;
+            --pixel-font: 'Press Start 2P', cursive;
+            --modern-font: 'Poppins', sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: var(--font-pixel);
+            background-color: #000;
+            color: #fff;
+            font-family: var(--pixel-font);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -28,16 +27,16 @@
             margin: 0;
             text-align: center;
             overflow: hidden;
-            /* Transition magique qui gère tout le changement d'ambiance */
-            transition: all 1.5s cubic-bezier(0.65, 0, 0.35, 1);
+            /* Transition globale pour l'effet de morphing */
+            transition: background 2s ease, font-family 0.5s ease;
         }
 
-        /* --- ÉTAT VICTOIRE : LA TRANSITION --- */
+        /* --- MODE VICTOIRE (MODERNE) --- */
         body.victory {
             background: linear-gradient(-45deg, #5865F2, #e73c7e, #23a6d5, #23d5ab);
             background-size: 400% 400%;
             animation: gradientBG 10s ease infinite;
-            font-family: var(--font-modern);
+            font-family: var(--modern-font);
         }
 
         @keyframes gradientBG {
@@ -46,14 +45,16 @@
             100% { background-position: 0% 50%; }
         }
 
+        /* --- INTERFACE DE JEU --- */
         #game-container {
-            transition: transform 1s ease, opacity 1s ease;
+            transition: all 0.8s ease;
+            opacity: 1;
+            z-index: 5;
         }
 
-        /* On fait disparaître doucement l'interface de jeu pour laisser place au message */
         body.victory #game-container {
-            transform: scale(0.8);
             opacity: 0;
+            transform: scale(0.5);
             pointer-events: none;
             position: absolute;
         }
@@ -62,7 +63,6 @@
             font-size: 1.8rem;
             margin-bottom: 40px;
             letter-spacing: 10px;
-            transition: all 1s ease;
         }
 
         input {
@@ -71,59 +71,81 @@
             color: #fff;
             font-family: inherit;
             font-size: 1.5rem;
-            width: 65px;
-            height: 65px;
+            width: 60px;
             text-align: center;
+            padding: 15px;
             outline: none;
             text-transform: uppercase;
-            transition: all 0.8s ease;
+            transition: all 0.5s ease;
         }
 
-        /* --- ÉCRAN FINAL (MASQUÉ AU DÉBUT) --- */
+        button {
+            margin-top: 20px;
+            font-family: inherit;
+            padding: 15px 30px;
+            border: none;
+            cursor: pointer;
+            background: #fff;
+            color: #000;
+            font-size: 0.8rem;
+        }
+
+        button:disabled { background: #444; color: #888; }
+
+        /* --- MESSAGE FINAL --- */
         #final-screen {
+            position: absolute;
             opacity: 0;
             transform: translateY(30px);
             display: none;
             flex-direction: column;
             align-items: center;
-            transition: all 1.5s ease;
+            width: 90%;
         }
 
         body.victory #final-screen {
             display: flex;
             opacity: 1;
             transform: translateY(0);
+            transition: all 1s ease 0.8s;
         }
 
-        #typewriter {
+        .discord-label {
             font-size: 1.2rem;
-            font-weight: 900;
-            line-height: 1.4;
-            letter-spacing: 1px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 10px;
         }
 
         .big-ismac {
             font-size: 5rem;
-            display: block;
-            margin-top: 20px;
-            filter: drop-shadow(0 0 20px rgba(255,255,255,0.4));
-            transform: scale(0.5);
-            animation: popIn 1s cubic-bezier(0.17, 0.89, 0.32, 1.49) forwards;
-            animation-delay: 2s; /* Attend que la transition de page soit finie */
+            font-weight: 900;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 40px;
+            border-radius: 100px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
         }
 
-        @keyframes popIn {
-            to { transform: scale(1); }
+        #message {
+            margin-top: 20px;
+            height: 20px;
+            font-size: 0.7rem;
         }
 
         #reset-btn {
-            position: absolute;
-            bottom: 20px;
+            position: fixed;
+            bottom: 10px;
             background: transparent;
             color: rgba(255,255,255,0.1);
+            font-size: 0.4rem;
             border: none;
-            font-size: 0.5rem;
             cursor: pointer;
+        }
+
+        @media (max-width: 400px) {
+            #word-display { font-size: 1.3rem; letter-spacing: 5px; }
+            .big-ismac { font-size: 3rem; }
         }
     </style>
 </head>
@@ -132,11 +154,14 @@
     <div id="game-container">
         <div id="word-display">_ _ _ _ _</div>
         <input type="text" id="letter-input" maxlength="1" autofocus autocomplete="off">
-        <div id="message" style="margin-top: 20px; font-size: 0.7rem;"></div>
+        <br>
+        <button id="validate-btn">VALIDER</button>
+        <div id="message"></div>
     </div>
 
     <div id="final-screen">
-        <div id="typewriter"></div>
+        <div class="discord-label">Rendez-vous sur Discord</div>
+        <div class="big-ismac">ISMAC</div>
     </div>
 
     <button id="reset-btn">ADMIN RESET</button>
@@ -155,12 +180,21 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const SECRET_WORD = "ISMAC";
-        let isVictory = false;
-
+        
         const displayElement = document.getElementById('word-display');
         const inputElement = document.getElementById('letter-input');
-        const typewriterElement = document.getElementById('typewriter');
+        const btnElement = document.getElementById('validate-btn');
         const messageElement = document.getElementById('message');
+
+        function checkLocalPlayer() {
+            if (localStorage.getItem('hasContributed') === 'true' && !document.body.classList.contains('victory')) {
+                inputElement.disabled = true;
+                btnElement.disabled = true;
+                inputElement.placeholder = "✔";
+                messageElement.style.color = "#00ff00";
+                messageElement.innerText = "TU AS DÉJÀ JOUÉ !";
+            }
+        }
 
         db.ref("mot").on("value", (snapshot) => {
             const data = snapshot.val() || {};
@@ -177,54 +211,50 @@
             }
             displayElement.innerText = display.trim();
 
-            if (foundCount === SECRET_WORD.length && !isVictory) {
-                isVictory = true;
-                triggerVictory();
+            if (foundCount === SECRET_WORD.length) {
+                document.body.classList.add('victory');
+            } else {
+                document.body.classList.remove('victory');
+                checkLocalPlayer();
             }
         });
 
-        function triggerVictory() {
-            document.body.classList.add('victory');
-            
-            // On attend que la transition de fond soit bien entamée pour lancer le texte
-            setTimeout(() => {
-                const text1 = "RENDEZ-VOUS SUR DISCORD POUR :";
-                typewriterElement.innerHTML = text1 + '<br><span class="big-ismac">ISMAC</span>';
-            }, 1000);
-        }
+        const validate = () => {
+            if (localStorage.getItem('hasContributed') === 'true') return;
+            const char = inputElement.value.toUpperCase();
+            if (!char) return;
 
-        inputElement.addEventListener('input', (e) => {
-            const char = e.target.value.toUpperCase();
-            if (!char || isVictory) return;
+            inputElement.value = "";
+            inputElement.disabled = true;
 
             if (SECRET_WORD.includes(char)) {
                 for (let i = 0; i < SECRET_WORD.length; i++) {
                     if (SECRET_WORD[i] === char) db.ref("mot/" + i).set(true);
                 }
                 localStorage.setItem('hasContributed', 'true');
-                inputElement.value = "";
-                // On peut laisser l'input actif pour les autres lettres si on veut
             } else {
+                messageElement.style.color = "#ff4444";
                 messageElement.innerText = "ERREUR";
-                inputElement.value = "";
-                setTimeout(() => messageElement.innerText = "", 1000);
-            }
-        });
-
-        document.getElementById('reset-btn').onclick = () => {
-            if(confirm("Reset?")) {
-                db.ref("mot").remove();
-                localStorage.clear();
-                location.reload();
+                setTimeout(() => {
+                    inputElement.disabled = false;
+                    messageElement.innerText = "";
+                    inputElement.focus();
+                }, 1000);
             }
         };
 
-        // Bloquer l'accès si déjà joué
-        if (localStorage.getItem('hasContributed') === 'true') {
-            inputElement.disabled = true;
-            inputElement.placeholder = "✔";
-            messageElement.innerText = "TU AS DÉJÀ APPORTÉ TA PIERRE !";
-        }
+        btnElement.onclick = validate;
+        inputElement.onkeypress = (e) => { if (e.key === "Enter") validate(); };
+        
+        document.getElementById('reset-btn').onclick = () => { 
+            if(confirm("Reset complet ?")) { 
+                db.ref("mot").remove(); 
+                localStorage.clear(); 
+                location.reload(); 
+            }
+        };
+
+        checkLocalPlayer();
     </script>
 </body>
 </html>
