@@ -8,114 +8,26 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
-        :root {
-            --pixel-font: 'Press Start 2P', cursive;
-            --modern-font: 'Poppins', sans-serif;
-        }
-
-        body {
-            margin: 0;
-            background: #000;
-            color: #fff;
-            font-family: var(--pixel-font);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-            transition: background 2s ease;
-            cursor: pointer;
-        }
-
-        /* --- JEU DU MOT --- */
-        #game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transition: opacity 1s ease;
-        }
-
+        :root { --pixel-font: 'Press Start 2P', cursive; --modern-font: 'Poppins', sans-serif; }
+        body { margin: 0; background: #000; color: #fff; font-family: var(--pixel-font); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; transition: background 2s ease; cursor: pointer; }
+        #game-container { display: flex; flex-direction: column; align-items: center; transition: opacity 1s ease; }
         #word-display { font-size: 1.8rem; margin-bottom: 40px; letter-spacing: 10px; }
-        
-        input { 
-            background: transparent; border: 4px solid #fff; color: #fff; 
-            font-family: inherit; font-size: 1.5rem; width: 65px; 
-            text-align: center; padding: 15px; outline: none; text-transform: uppercase; 
-            margin-bottom: 20px;
-        }
-
-        #validate-btn {
-            background: #fff;
-            color: #000;
-            border: none;
-            padding: 10px 20px;
-            font-family: var(--pixel-font);
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        #validate-btn:active { transform: scale(0.95); }
-        #validate-btn:disabled { background: #444; color: #888; cursor: not-allowed; }
-
-        /* --- CINEMATIQUE --- */
-        #cinematic-container {
-            display: none;
-            width: 100%;
-            max-width: 600px;
-            text-align: center;
-            opacity: 0;
-            transition: opacity 1s ease;
-        }
-
-        #scene {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            height: 250px;
-            margin-top: 20px;
-        }
-
+        input { background: transparent; border: 4px solid #fff; color: #fff; font-family: inherit; font-size: 1.5rem; width: 65px; text-align: center; padding: 15px; outline: none; text-transform: uppercase; margin-bottom: 20px; }
+        #validate-btn { background: #fff; color: #000; border: none; padding: 10px 20px; font-family: var(--pixel-font); font-size: 0.7rem; cursor: pointer; }
+        #validate-btn:disabled { background: #444; color: #888; }
+        #cinematic-container { display: none; width: 100%; max-width: 600px; text-align: center; opacity: 0; transition: opacity 1s ease; }
+        #scene { display: flex; justify-content: space-around; align-items: center; height: 300px; margin-top: 10px; }
         canvas { image-rendering: pixelated; transition: opacity 0.5s; }
-        .shark-sprite {
-            width: 100px; height: 100px; background: #fff;
-            clip-path: polygon(25% 100%, 45% 85%, 75% 85%, 100% 75%, 85% 55%, 75% 15%, 55% 55%, 0% 75%);
-        }
-
-        /* --- FINAL --- */
-        #final-screen {
-            display: none;
-            position: fixed;
-            inset: 0;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(-45deg, #5865F2, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradientBG 10s ease infinite;
-            z-index: 100;
-        }
-
-        .big-ismac { 
-            font-family: var(--modern-font); font-size: 5rem;
-            background: rgba(255,255,255,0.2); padding: 10px 50px; border-radius: 100px;
-            backdrop-filter: blur(10px); box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
+        .shark-sprite { width: 80px; height: 80px; background: #fff; clip-path: polygon(25% 100%, 45% 85%, 75% 85%, 100% 75%, 85% 55%, 75% 15%, 55% 55%, 0% 75%); }
+        #final-screen { display: none; position: fixed; inset: 0; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(-45deg, #5865F2, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradientBG 10s ease infinite; z-index: 100; }
+        .big-ismac { font-family: var(--modern-font); font-size: 4rem; background: rgba(255,255,255,0.2); padding: 10px 40px; border-radius: 100px; backdrop-filter: blur(10px); }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         #reset-btn { position: fixed; bottom: 10px; left: 10px; background: transparent; border: none; color: #111; font-size: 0.4rem; }
     </style>
 </head>
 <body onclick="handleInteraction()">
 
     <div id="game-container">
-        <div style="font-size: 0.5rem; margin-bottom: 20px; color: #444;">DÉCRYPTEZ LE CADEAU</div>
         <div id="word-display">_ _ _ _ _</div>
         <input type="text" id="letter-input" maxlength="1" autocomplete="off" autofocus>
         <button id="validate-btn">VALIDER</button>
@@ -123,156 +35,63 @@
     </div>
 
     <div id="cinematic-container">
-        <div id="speaker" style="font-size: 0.5rem; color: #555; margin-bottom: 15px; text-transform: uppercase;"></div>
-        <div id="dialogue-text" style="font-size: 0.7rem; line-height: 1.8; min-height: 120px; padding: 0 30px;"></div>
+        <div id="speaker" style="font-size: 0.5rem; color: #555; margin-bottom: 10px;"></div>
+        <div id="dialogue-text" style="font-size: 0.65rem; line-height: 1.6; min-height: 100px; padding: 0 20px;"></div>
         <div id="scene">
             <canvas id="crocoCanvas"></canvas>
             <div id="shark-sprite" class="shark-sprite"></div>
         </div>
     </div>
 
-    <div id="final-screen">
-        <div style="font-family: var(--modern-font); font-weight: 800; margin-bottom: 20px;">BIENVENUE CHEZ</div>
-        <div class="big-ismac">ISMAC</div>
-    </div>
-
+    <div id="final-screen"><div class="big-ismac">ISMAC</div></div>
     <button id="reset-btn" onclick="adminReset()">RESET</button>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCLUNQhx8h0dHmiI3rqJ6QPuDju0Aa4zAo",
-            authDomain: "trailer-90acb.firebaseapp.com",
-            databaseURL: "https://trailer-90acb-default-rtdb.firebaseio.com",
-            projectId: "trailer-90acb",
-            storageBucket: "trailer-90acb.firebasestorage.app",
-            messagingSenderId: "216077694665",
-            appId: "1:216077694665:web:e6090a278b656f7d2f7f18"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyCLUNQhx8h0dHmiI3rqJ6QPuDju0Aa4zAo", authDomain: "trailer-90acb.firebaseapp.com", databaseURL: "https://trailer-90acb-default-rtdb.firebaseio.com", projectId: "trailer-90acb", storageBucket: "trailer-90acb.firebasestorage.app", messagingSenderId: "216077694665", appId: "1:216077694665:web:e6090a278b656f7d2f7f18" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const SECRET_WORD = "ISMAC";
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playTypeSound() {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.05);
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = 'square'; osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime); osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.03);
         }
 
         const canvas = document.getElementById('crocoCanvas');
         const ctx = canvas.getContext('2d');
-        const sprite = [[0,0,0,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1],[0,0,0,1,1,1,1,1,0],[0,0,0,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,0],[0,0,0,1,1,1,1,1,1],[0,0,0,1,1,1,1,1,0],[0,0,1,1,1,1,0,0,0],[0,0,1,1,1,1,0,0,0]];
-        const pSize = 10;
-        canvas.width = sprite[0].length * pSize;
-        canvas.height = sprite.length * pSize;
-        function drawSprite() { ctx.fillStyle = "#FFFFFF"; for (let y = 0; y < sprite.length; y++) { for (let x = 0; x < sprite[y].length; x++) { if (sprite[y][x] === 1) ctx.fillRect(x * pSize, y * pSize, pSize, pSize); } } }
-        drawSprite();
+        const spriteStr = `111111111111111111111111111111111111,111111111111111111111111111111111111,111111111111000000001111111111111111,111111111111000000001111111111111111,111111111111000000001111111111111111,111111111111000000001111111111111111,111111111110000000000011111111111111,111111000000000000000000001111111111,111111000000000000000000001111111111,111111000000000000000000001111111111,111111000000000000000000001111111111,111111000000000000000000001111111111,111111111100000000000001111111111111,111111111100000000000001111111111111,111111111100000000000001111111111111,111111111100000000000001111111111111,111111111110000000000000111111111111,111111111110000000000000000111111111,111111111111000000000000000111111111,111111111100000000000000000000111111,111111111000000000000000000000111111,111111111000000000000000000000111111,111111111000000000000000100000111111,111111111000000000000000100000111111,111111111000000000000000100001111111,111111111000000000000000100000111111,111111111000000000000000100000111111,111111111000000000000000100000111111,111111111100000000000001100001111111,111111111111000011000001111111111111,111111111111000011000001111111111111,111111111110000011000001111111111111,111111111110000011000001111111111111,111111111110000011000001111111111111,111111111110000011000001111111111111,111111111100000000000001111111111111,111111111100000000000001111111111111,111111111100000000000001111111111111,111111111111111111111111111111111111,111111111111111111111111111111111111`;
+        const sprite = spriteStr.split(',').map(r => r.split('').map(Number));
+        const pSize = 4; canvas.width = 36 * pSize; canvas.height = 40 * pSize;
+        function drawS() { ctx.fillStyle = "#FFF"; for(let y=0;y<40;y++) for(let x=0;x<36;x++) if(sprite[y][x]===0) ctx.fillRect(x*pSize,y*pSize,pSize,pSize); }
+        drawS();
 
-        const script = [
-            { n: "crocodile", t: "Hey" },
-            { n: "requin", t: "?" },
-            { n: "crocodile", t: "Ils ont enfin réussi les 5 épreuves" },
-            { n: "requin", t: "Ah ouais ? Ils en ont mis du temps dis donc" },
-            { n: "crocodile", t: "Faut pas leur en vouloir, au moins ils auront appris des choses du genre :" },
-            { n: "crocodile", t: "Qu’il faut cliquer sur des robots pour les éliminer, que 1+1 = 2..." },
-            { n: "crocodile", t: "Ou bien qu’on peut survivre avec un lobe frontal en moins." },
-            { n: "requin", t: "Un lobe frontal… en moins… ? Qu’est ce que c’est que ces conneries ?" },
-            { n: "crocodile", t: "Bref… Avec du boulot on peut tout avoir" },
-            { n: "requin", t: "Et on repartira avec rien" },
-            { n: "crocodile", t: "Certes, mais je vais leur donner un p’tit cadeau : ISMAC" }
-        ];
-
+        const script = [{n:"crocodile",t:"Hey"},{n:"requin",t:"?"},{n:"crocodile",t:"Ils ont enfin réussi les 5 épreuves"},{n:"requin",t:"Ah ouais ? Ils en ont mis du temps dis donc"},{n:"crocodile",t:"Faut pas leur en vouloir, au moins ils auront appris des choses..."},{n:"crocodile",t:"Qu’il faut cliquer sur des robots pour les éliminer, que 1+1 = 2..."},{n:"crocodile",t:"Ou bien qu’on peut survivre avec un lobe frontal en moins."},{n:"requin",t:"Un lobe frontal… en moins… ? Qu’est ce que c’est que ces conneries ?"},{n:"crocodile",t:"Bref… Avec du boulot on peut tout avoir"},{n:"requin",t:"Et on repartira avec rien"},{n:"crocodile",t:"Certes, mais je vais leur donner un p’tit cadeau : ISMAC"}];
         let phase = "game"; let currentLine = -1; let isTyping = false; let solved = false;
 
-        db.ref("mot").on("value", (snap) => {
-            const data = snap.val() || {};
-            let display = ""; let count = 0;
-            for (let i = 0; i < SECRET_WORD.length; i++) {
-                if (data[i] === true) { display += SECRET_WORD[i] + " "; count++; }
-                else display += "_ ";
-            }
-            document.getElementById('word-display').innerText = display.trim();
-            if (count === SECRET_WORD.length && !solved) { solved = true; startCinematic(); }
+        db.ref("mot").on("value", snap => {
+            const data = snap.val() || {}; let disp = ""; let count = 0;
+            for(let i=0;i<5;i++) { if(data[i]) { disp+=SECRET_WORD[i]+" "; count++; } else disp+="_ "; }
+            document.getElementById('word-display').innerText = disp.trim();
+            if(count===5 && !solved) { solved=true; startCinematic(); }
         });
 
-        function handleInteraction() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            if (phase === "cinema" && !isTyping) nextLine();
-        }
+        function handleInteraction() { if(audioCtx.state==='suspended') audioCtx.resume(); if(phase==="cinema" && !isTyping) nextLine(); }
+        function startCinematic() { phase="cinema"; document.getElementById('game-container').style.opacity="0"; setTimeout(() => { document.getElementById('game-container').style.display="none"; const cin = document.getElementById('cinematic-container'); cin.style.display="block"; setTimeout(() => cin.style.opacity="1", 100); nextLine(); }, 1000); }
+        function nextLine() { currentLine++; if(currentLine < script.length) { const l = script[currentLine]; document.getElementById('speaker').textContent = l.n; canvas.style.opacity = (l.n==="crocodile")?1:0.2; document.getElementById('shark-sprite').style.opacity = (l.n==="requin")?1:0.2; typeW(l.t); } else showF(); }
+        function typeW(text) { isTyping = true; let i = 0; const el = document.getElementById('dialogue-text'); el.textContent = ""; const itv = setInterval(() => { el.textContent += text[i]; playTypeSound(); i++; if(i>=text.length) { clearInterval(itv); isTyping=false; } }, 45); }
+        function showF() { phase="final"; document.getElementById('cinematic-container').style.opacity="0"; setTimeout(() => document.getElementById('final-screen').style.display="flex", 1000); }
 
-        function startCinematic() {
-            phase = "cinema";
-            document.getElementById('game-container').style.opacity = "0";
-            setTimeout(() => {
-                document.getElementById('game-container').style.display = "none";
-                const cin = document.getElementById('cinematic-container');
-                cin.style.display = "block";
-                setTimeout(() => cin.style.opacity = "1", 100);
-                nextLine();
-            }, 1000);
-        }
-
-        function nextLine() {
-            currentLine++;
-            if (currentLine < script.length) {
-                const line = script[currentLine];
-                document.getElementById('speaker').textContent = line.n;
-                canvas.style.opacity = (line.n === "crocodile") ? "1" : "0.2";
-                document.getElementById('shark-sprite').style.opacity = (line.n === "requin") ? "1" : "0.2";
-                typeWriter(line.t);
-            } else showFinal();
-        }
-
-        function typeWriter(text) {
-            isTyping = true;
-            let i = 0;
-            const el = document.getElementById('dialogue-text');
-            el.textContent = "";
-            const interval = setInterval(() => {
-                el.textContent += text[i];
-                playTypeSound();
-                i++;
-                if (i >= text.length) { clearInterval(interval); isTyping = false; }
-            }, 50);
-        }
-
-        function showFinal() {
-            phase = "final";
-            document.getElementById('cinematic-container').style.opacity = "0";
-            setTimeout(() => document.getElementById('final-screen').style.display = "flex", 1000);
-        }
-
-        const validateAction = () => {
-            if (localStorage.getItem('hasContributed')) return;
-            const input = document.getElementById('letter-input');
-            const char = input.value.toUpperCase();
-            if (SECRET_WORD.includes(char)) {
-                for (let i = 0; i < SECRET_WORD.length; i++) if (SECRET_WORD[i] === char) db.ref("mot/" + i).set(true);
-                localStorage.setItem('hasContributed', 'true');
-                input.disabled = true;
-                document.getElementById('validate-btn').disabled = true;
-            } else {
-                document.getElementById('game-message').innerText = "ERREUR";
-                input.value = "";
-                setTimeout(() => document.getElementById('game-message').innerText = "", 1000);
-            }
+        const validate = () => {
+            const inp = document.getElementById('letter-input'); const char = inp.value.toUpperCase();
+            if(SECRET_WORD.includes(char)) { for(let i=0;i<5;i++) if(SECRET_WORD[i]===char) db.ref("mot/"+i).set(true); localStorage.setItem('hasContributed','true'); inp.disabled=true; document.getElementById('validate-btn').disabled=true; }
+            else { document.getElementById('game-message').innerText="ERREUR"; inp.value=""; setTimeout(() => document.getElementById('game-message').innerText="", 1000); }
         };
-
-        document.getElementById('validate-btn').onclick = validateAction;
-        document.getElementById('letter-input').onkeypress = (e) => { if(e.key === "Enter") validateAction(); };
-
+        document.getElementById('validate-btn').onclick = validate;
         function adminReset() { if(confirm("Reset?")) { db.ref("mot").remove(); localStorage.clear(); location.reload(); } }
-        if (localStorage.getItem('hasContributed')) { 
-            document.getElementById('letter-input').disabled = true; 
-            document.getElementById('validate-btn').disabled = true;
-        }
+        if(localStorage.getItem('hasContributed')) { document.getElementById('letter-input').disabled=true; document.getElementById('validate-btn').disabled=true; }
     </script>
 </body>
 </html>
