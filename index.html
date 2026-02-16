@@ -128,3 +128,143 @@
             authDomain: "trailer-90acb.firebaseapp.com",
             databaseURL: "https://trailer-90acb-default-rtdb.firebaseio.com",
             projectId: "trailer-90acb",
+            storageBucket: "trailer-90acb.firebasestorage.app",
+            messagingSenderId: "216077694665",
+            appId: "1:216077694665:web:e6090a278b656f7d2f7f18"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const SECRET_WORD = "ISMAC";
+
+        // AUDIO (Bip rétro)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTypeSound() {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        // DESSIN DU PERSONNAGE PIXEL (Canvas)
+        const canvas = document.getElementById('crocoCanvas');
+        const ctx = canvas.getContext('2d');
+        const sprite = [
+            [0,0,0,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,0],
+            [0,0,1,1,1,1,1,1,1],[0,0,0,1,1,1,1,1,0],[0,0,0,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,0],[0,0,0,1,1,1,1,1,1],[0,0,0,1,1,1,1,1,0],
+            [0,0,1,1,1,1,0,0,0],[0,0,1,1,1,1,0,0,0]
+        ];
+        const pSize = 10;
+        canvas.width = sprite[0].length * pSize;
+        canvas.height = sprite.length * pSize;
+
+        function drawSprite() {
+            ctx.fillStyle = "#FFFFFF";
+            for (let y = 0; y < sprite.length; y++) {
+                for (let x = 0; x < sprite[y].length; x++) {
+                    if (sprite[y][x] === 1) ctx.fillRect(x * pSize, y * pSize, pSize, pSize);
+                }
+            }
+        }
+        drawSprite();
+
+        // LOGIQUE DIALOGUE
+        const script = [
+            { n: "crocodile", t: "Hey" },
+            { n: "requin", t: "?" },
+            { n: "crocodile", t: "Ils ont enfin réussi les 5 épreuves" },
+            { n: "requin", t: "Ah ouais ? Ils en ont mis du temps dis donc" },
+            { n: "crocodile", t: "Faut pas leur en vouloir, au moins ils auront appris des choses du genre :" },
+            { n: "crocodile", t: "Qu’il faut cliquer sur des robots pour les éliminer, que 1+1 = 2..." },
+            { n: "crocodile", t: "Ou bien qu’on peut survivre avec un lobe frontal en moins." },
+            { n: "requin", t: "Un lobe frontal… en moins… ? Qu’est ce que c’est que ces conneries ?" },
+            { n: "crocodile", t: "Bref… Avec du boulot on peut tout avoir" },
+            { n: "requin", t: "Et on repartira avec rien" },
+            { n: "crocodile", t: "Certes, mais je vais leur donner un p’tit cadeau : ISMAC" }
+        ];
+
+        let phase = "game"; let currentLine = -1; let isTyping = false; let solved = false;
+
+        db.ref("mot").on("value", (snap) => {
+            const data = snap.val() || {};
+            let display = ""; let count = 0;
+            for (let i = 0; i < SECRET_WORD.length; i++) {
+                if (data[i] === true) { display += SECRET_WORD[i] + " "; count++; }
+                else display += "_ ";
+            }
+            document.getElementById('word-display').innerText = display.trim();
+            if (count === SECRET_WORD.length && !solved) { solved = true; startCinematic(); }
+        });
+
+        function handleInteraction() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (phase === "cinema" && !isTyping) nextLine();
+        }
+
+        function startCinematic() {
+            phase = "cinema";
+            document.getElementById('game-container').style.opacity = "0";
+            setTimeout(() => {
+                document.getElementById('game-container').style.display = "none";
+                const cin = document.getElementById('cinematic-container');
+                cin.style.display = "block";
+                setTimeout(() => cin.style.opacity = "1", 100);
+                nextLine();
+            }, 1000);
+        }
+
+        function nextLine() {
+            currentLine++;
+            if (currentLine < script.length) {
+                const line = script[currentLine];
+                document.getElementById('speaker').textContent = line.n;
+                canvas.style.opacity = (line.n === "crocodile") ? "1" : "0.2";
+                document.getElementById('shark-sprite').style.opacity = (line.n === "requin") ? "1" : "0.2";
+                typeWriter(line.t);
+            } else showFinal();
+        }
+
+        function typeWriter(text) {
+            isTyping = true;
+            let i = 0;
+            const el = document.getElementById('dialogue-text');
+            el.textContent = "";
+            const interval = setInterval(() => {
+                el.textContent += text[i];
+                playTypeSound();
+                i++;
+                if (i >= text.length) { clearInterval(interval); isTyping = false; }
+            }, 50);
+        }
+
+        function showFinal() {
+            phase = "final";
+            document.getElementById('cinematic-container').style.opacity = "0";
+            setTimeout(() => document.getElementById('final-screen').style.display = "flex", 1000);
+        }
+
+        document.getElementById('letter-input').addEventListener('input', (e) => {
+            if (localStorage.getItem('hasContributed')) return;
+            const char = e.target.value.toUpperCase();
+            if (SECRET_WORD.includes(char)) {
+                for (let i = 0; i < SECRET_WORD.length; i++) if (SECRET_WORD[i] === char) db.ref("mot/" + i).set(true);
+                localStorage.setItem('hasContributed', 'true');
+                e.target.disabled = true;
+            } else {
+                document.getElementById('game-message').innerText = "ERREUR";
+                e.target.value = "";
+                setTimeout(() => document.getElementById('game-message').innerText = "", 1000);
+            }
+        });
+
+        function adminReset() { if(confirm("Reset?")) { db.ref("mot").remove(); localStorage.clear(); location.reload(); } }
+        if (localStorage.getItem('hasContributed')) { document.getElementById('letter-input').disabled = true; document.getElementById('letter-input').placeholder = "✔"; }
+    </script>
+</body>
+</html>
