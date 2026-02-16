@@ -2,276 +2,208 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DEFI : FINALE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Forêt Mystère - ISMAC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --pixel-font: 'Press Start 2P', cursive;
-            --modern-font: 'Poppins', sans-serif;
-        }
-
         body {
-            background-color: #000;
-            color: #fff;
-            font-family: var(--pixel-font);
+            margin: 0;
+            background: #0a1a0a;
+            color: white;
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            margin: 0;
-            text-align: center;
+            touch-action: none;
+        }
+
+        #game-board {
+            position: relative;
+            width: 90vw;
+            height: 60vh;
+            background: #1a331a; /* Couleur herbe sombre */
+            border: 4px solid #2d5a2d;
+            border-radius: 10px;
             overflow: hidden;
-            transition: background 2s ease, font-family 0.8s ease;
+            background-image: radial-gradient(#244224 1px, transparent 1px);
+            background-size: 20px 20px;
         }
 
-        body.victory {
-            background: linear-gradient(-45deg, #5865F2, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradientBG 10s ease infinite;
-            font-family: var(--modern-font);
-        }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        #game-container {
-            transition: all 0.8s ease;
-            opacity: 1;
-        }
-
-        body.victory #game-container {
-            opacity: 0;
-            transform: scale(0.5);
-            pointer-events: none;
+        /* Personnage */
+        #player {
             position: absolute;
-        }
-
-        #word-display {
-            font-size: 1.8rem;
-            margin-bottom: 40px;
-            letter-spacing: 10px;
-        }
-
-        input {
-            background: transparent;
-            border: 4px solid #fff;
-            color: #fff;
-            font-family: inherit;
-            font-size: 1.5rem;
-            width: 60px;
-            text-align: center;
-            padding: 15px;
-            outline: none;
-            text-transform: uppercase;
-        }
-
-        button {
-            margin-top: 20px;
-            font-family: inherit;
-            padding: 15px 30px;
-            border: none;
-            cursor: pointer;
-            background: #fff;
-            color: #000;
-            font-size: 0.8rem;
-        }
-
-        /* --- MESSAGE FINAL --- */
-        #final-screen {
-            position: absolute;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            width: 90%;
+            width: 30px;
+            height: 30px;
+            background: #5865F2; /* Bleu Discord */
+            border-radius: 5px;
+            transition: 0.1s linear;
             z-index: 10;
         }
 
-        body.victory #final-screen {
-            display: flex;
+        /* Coffre */
+        #chest {
+            position: absolute;
+            width: 35px;
+            height: 30px;
+            background: #ffd700;
+            border: 3px solid #b8860b;
+            bottom: 20px;
+            right: 20px;
+            border-radius: 3px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
         }
 
-        #typewriter-text {
-            font-size: 1.2rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-            min-height: 1.5em;
+        /* Arbres (Obstacles) */
+        .tree {
+            position: absolute;
+            background: #0d210d;
+            border-radius: 50%;
         }
 
-        .big-ismac {
-            font-size: 5rem;
-            font-weight: 900;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 10px 40px;
-            border-radius: 100px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 1s ease;
-        }
-
-        .big-ismac.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        #message { margin-top: 20px; height: 20px; font-size: 0.7rem; }
-
-        #reset-btn {
+        /* Écran de victoire */
+        #victory-screen {
+            display: none;
             position: fixed;
-            bottom: 10px;
-            background: transparent;
-            color: rgba(255,255,255,0.1);
-            font-size: 0.4rem;
-            border: none;
-            cursor: pointer;
+            inset: 0;
+            background: linear-gradient(-45deg, #5865F2, #e73c7e, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 5s ease infinite;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
         }
 
-        @media (max-width: 400px) {
-            #word-display { font-size: 1.3rem; letter-spacing: 5px; }
-            .big-ismac { font-size: 3rem; }
+        .ismac-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 5rem;
+            text-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            margin: 0;
+        }
+
+        /* Contrôles tactiles pour mobile */
+        #controls {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid white;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            user-select: none;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="word-display">_ _ _ _ _</div>
-        <input type="text" id="letter-input" maxlength="1" autofocus autocomplete="off">
-        <br>
-        <button id="validate-btn">VALIDER</button>
-        <div id="message"></div>
+    <div style="font-size: 0.6rem; margin-bottom: 10px;">TROUVE LE COFFRE ISMAC</div>
+
+    <div id="game-board">
+        <div id="player"></div>
+        <div id="chest"></div>
+        </div>
+
+    <div id="controls">
+        <div></div>
+        <div class="btn" id="up">▲</div>
+        <div></div>
+        <div class="btn" id="left">◀</div>
+        <div class="btn" id="down">▼</div>
+        <div class="btn" id="right">▶</div>
     </div>
 
-    <div id="final-screen">
-        <div id="typewriter-text"></div>
-        <div id="final-word" class="big-ismac">ISMAC</div>
+    <div id="victory-screen">
+        <div style="font-size: 0.8rem; margin-bottom: 20px;">VOUS AVEZ TROUVÉ</div>
+        <h1 class="ismac-title">ISMAC</h1>
+        <button onclick="location.reload()" style="margin-top: 30px; background: white; border: none; padding: 10px 20px; font-family: 'Press Start 2P'; font-size: 0.5rem; cursor: pointer;">REJOUER</button>
     </div>
-
-    <button id="reset-btn">ADMIN RESET</button>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCLUNQhx8h0dHmiI3rqJ6QPuDju0Aa4zAo",
-            authDomain: "trailer-90acb.firebaseapp.com",
-            databaseURL: "https://trailer-90acb-default-rtdb.firebaseio.com",
-            projectId: "trailer-90acb",
-            storageBucket: "trailer-90acb.firebasestorage.app",
-            messagingSenderId: "216077694665",
-            appId: "1:216077694665:web:e6090a278b656f7d2f7f18"
-        };
+        const player = document.getElementById('player');
+        const chest = document.getElementById('chest');
+        const board = document.getElementById('game-board');
+        const victoryScreen = document.getElementById('victory-screen');
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const SECRET_WORD = "ISMAC";
-        let animationStarted = false;
-        
-        const displayElement = document.getElementById('word-display');
-        const inputElement = document.getElementById('letter-input');
-        const btnElement = document.getElementById('validate-btn');
-        const messageElement = document.getElementById('message');
-        const typewriterElement = document.getElementById('typewriter-text');
-        const finalWordElement = document.getElementById('final-word');
+        let posX = 20;
+        let posY = 20;
+        const step = 15;
 
-        function startVictorySequence() {
-            if (animationStarted) return;
-            animationStarted = true;
-            document.body.classList.add('victory');
-
-            const fullText = "Rendez-vous sur Discord pour :";
-            let i = 0;
-
-            // On attend un peu que la transition de fond commence
-            setTimeout(() => {
-                const interval = setInterval(() => {
-                    typewriterElement.textContent += fullText[i];
-                    i++;
-                    if (i === fullText.length) {
-                        clearInterval(interval);
-                        // Une fois le texte fini, on montre le gros mot
-                        setTimeout(() => {
-                            finalWordElement.classList.add('show');
-                        }, 500);
-                    }
-                }, 70); // Vitesse d'écriture
-            }, 1000);
+        // Génération d'obstacles (arbres)
+        for(let i=0; i<15; i++) {
+            const tree = document.createElement('div');
+            tree.className = 'tree';
+            const size = Math.random() * 40 + 30;
+            tree.style.width = size + 'px';
+            tree.style.height = size + 'px';
+            tree.style.left = Math.random() * 70 + 10 + '%';
+            tree.style.top = Math.random() * 70 + 10 + '%';
+            board.appendChild(tree);
         }
 
-        db.ref("mot").on("value", (snapshot) => {
-            const data = snapshot.val() || {};
-            let display = "";
-            let foundCount = 0;
+        function updatePosition() {
+            player.style.left = posX + 'px';
+            player.style.top = posY + 'px';
+            checkVictory();
+        }
 
-            for (let i = 0; i < SECRET_WORD.length; i++) {
-                if (data[i] === true) {
-                    display += SECRET_WORD[i] + " ";
-                    foundCount++;
-                } else {
-                    display += "_ ";
-                }
-            }
-            displayElement.innerText = display.trim();
+        function move(dir) {
+            const boardRect = board.getBoundingClientRect();
+            if (dir === 'up' && posY > 0) posY -= step;
+            if (dir === 'down' && posY < boardRect.height - 35) posY += step;
+            if (dir === 'left' && posX > 0) posX -= step;
+            if (dir === 'right' && posX < boardRect.width - 35) posX += step;
+            updatePosition();
+        }
 
-            if (foundCount === SECRET_WORD.length) {
-                startVictorySequence();
-            } else {
-                document.body.classList.remove('victory');
-                animationStarted = false;
-                typewriterElement.textContent = "";
-                finalWordElement.classList.remove('show');
-                checkLocalPlayer();
+        function checkVictory() {
+            const p = player.getBoundingClientRect();
+            const c = chest.getBoundingClientRect();
+
+            // Collision simple
+            if (!(p.right < c.left || p.left > c.right || p.bottom < c.top || p.top > c.bottom)) {
+                victoryScreen.style.display = 'flex';
             }
+        }
+
+        // Contrôles Clavier
+        window.addEventListener('keydown', (e) => {
+            if (e.key === "ArrowUp") move('up');
+            if (e.key === "ArrowDown") move('down');
+            if (e.key === "ArrowLeft") move('left');
+            if (e.key === "ArrowRight") move('right');
         });
 
-        const validate = () => {
-            if (localStorage.getItem('hasContributed') === 'true') return;
-            const char = inputElement.value.toUpperCase();
-            if (!char) return;
+        // Contrôles Tactiles
+        document.getElementById('up').ontouchstart = (e) => { e.preventDefault(); move('up'); };
+        document.getElementById('down').ontouchstart = (e) => { e.preventDefault(); move('down'); };
+        document.getElementById('left').ontouchstart = (e) => { e.preventDefault(); move('left'); };
+        document.getElementById('right').ontouchstart = (e) => { e.preventDefault(); move('right'); };
+        
+        // Support clic souris pour test PC
+        document.getElementById('up').onclick = () => move('up');
+        document.getElementById('down').onclick = () => move('down');
+        document.getElementById('left').onclick = () => move('left');
+        document.getElementById('right').onclick = () => move('right');
 
-            inputElement.value = "";
-            inputElement.disabled = true;
-
-            if (SECRET_WORD.includes(char)) {
-                for (let i = 0; i < SECRET_WORD.length; i++) {
-                    if (SECRET_WORD[i] === char) db.ref("mot/" + i).set(true);
-                }
-                localStorage.setItem('hasContributed', 'true');
-            } else {
-                messageElement.style.color = "#ff4444";
-                messageElement.innerText = "ERREUR";
-                setTimeout(() => {
-                    inputElement.disabled = false;
-                    messageElement.innerText = "";
-                    inputElement.focus();
-                }, 1000);
-            }
-        };
-
-        function checkLocalPlayer() {
-            if (localStorage.getItem('hasContributed') === 'true' && !document.body.classList.contains('victory')) {
-                inputElement.disabled = true;
-                btnElement.disabled = true;
-                inputElement.placeholder = "✔";
-                messageElement.style.color = "#00ff00";
-                messageElement.innerText = "TU AS DÉJÀ JOUÉ !";
-            }
-        }
-
-        btnElement.onclick = validate;
-        inputElement.onkeypress = (e) => { if (e.key === "Enter") validate(); };
-        document.getElementById('reset-btn').onclick = () => { 
-            if(confirm("Reset complet ?")) { db.ref("mot").remove(); localStorage.clear(); location.reload(); }
-        };
-
-        checkLocalPlayer();
+        updatePosition();
     </script>
 </body>
 </html>
