@@ -28,7 +28,7 @@
             cursor: pointer;
         }
 
-        /* --- JEU DU MOT (PHASE 1) --- */
+        /* --- JEU DU MOT --- */
         #game-container {
             display: flex;
             flex-direction: column;
@@ -39,11 +39,11 @@
         #word-display { font-size: 1.8rem; margin-bottom: 40px; letter-spacing: 10px; }
         input { 
             background: transparent; border: 4px solid #fff; color: #fff; 
-            font-family: inherit; font-size: 1.5rem; width: 60px; 
+            font-family: inherit; font-size: 1.5rem; width: 65px; 
             text-align: center; padding: 15px; outline: none; text-transform: uppercase; 
         }
 
-        /* --- CINEMATIQUE (PHASE 2) --- */
+        /* --- CINEMATIQUE --- */
         #cinematic-container {
             display: none;
             width: 100%;
@@ -61,40 +61,13 @@
             margin-top: 20px;
         }
 
-        /* TON PERSONNAGE PIXEL */
-        .pixel-character {
-            position: relative;
-            width: 8px; /* Réduit pour l'affichage scène */
-            height: 8px;
-            background: transparent;
-            box-shadow: 
-                30px 0px #FFFFFF, 45px 0px #FFFFFF,
-                15px 15px #FFFFFF, 30px 15px #FFFFFF, 45px 15px #FFFFFF, 60px 15px #FFFFFF,
-                15px 30px #FFFFFF, 30px 30px #FFFFFF, 45px 30px #FFFFFF,
-                0px 45px #FFFFFF, 15px 45px #FFFFFF, 30px 45px #FFFFFF, 45px 45px #FFFFFF, 60px 45px #FFFFFF, 75px 45px #FFFFFF,
-                30px 60px #FFFFFF, 45px 60px #FFFFFF, 60px 60px #FFFFFF,
-                30px 75px #FFFFFF, 45px 75px #FFFFFF, 60px 75px #FFFFFF, 75px 75px #FFFFFF,
-                0px 90px #FFFFFF, 15px 90px #FFFFFF, 30px 90px #FFFFFF, 45px 90px #FFFFFF, 60px 90px #FFFFFF, 90px 90px #FFFFFF,
-                30px 105px #FFFFFF, 45px 105px #FFFFFF, 60px 105px #FFFFFF,
-                30px 120px #FFFFFF, 45px 120px #FFFFFF;
-            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
-            animation: flicker 0.2s infinite;
-            transform: translateX(-40px) scale(1.5);
-        }
-
+        canvas { image-rendering: pixelated; transition: opacity 0.5s; }
         .shark-sprite {
             width: 100px; height: 100px; background: #fff;
             clip-path: polygon(25% 100%, 45% 85%, 75% 85%, 100% 75%, 85% 55%, 75% 15%, 55% 55%, 0% 75%);
-            transition: opacity 0.5s;
         }
 
-        @keyframes flicker {
-            0% { opacity: 1; transform: scale(1.5); }
-            50% { opacity: 0.8; transform: scale(1.51); }
-            100% { opacity: 0.9; transform: scale(1.49); }
-        }
-
-        /* --- FINAL (PHASE 3) --- */
+        /* --- FINAL --- */
         #final-screen {
             display: none;
             position: fixed;
@@ -109,7 +82,7 @@
         }
 
         .big-ismac { 
-            font-family: var(--modern-font); font-size: 5rem; letter-spacing: -2px;
+            font-family: var(--modern-font); font-size: 5rem;
             background: rgba(255,255,255,0.2); padding: 10px 50px; border-radius: 100px;
             backdrop-filter: blur(10px); box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
@@ -120,156 +93,38 @@
             100% { background-position: 0% 50%; }
         }
 
-        #reset-btn { position: fixed; bottom: 10px; background: transparent; border: none; color: #111; font-size: 0.5rem; }
+        #reset-btn { position: fixed; bottom: 10px; left: 10px; background: transparent; border: none; color: #111; font-size: 0.4rem; }
     </style>
 </head>
 <body onclick="handleInteraction()">
 
     <div id="game-container">
-        <div style="font-size: 0.6rem; margin-bottom: 20px; color: #444;">MOT MYSTÈRE COLLECTIF</div>
+        <div style="font-size: 0.5rem; margin-bottom: 20px; color: #444;">DÉCRYPTEZ LE CADEAU</div>
         <div id="word-display">_ _ _ _ _</div>
-        <input type="text" id="letter-input" maxlength="1" autocomplete="off">
-        <div id="game-message" style="margin-top: 20px; font-size: 0.7rem; height: 20px;"></div>
+        <input type="text" id="letter-input" maxlength="1" autocomplete="off" autofocus>
+        <div id="game-message" style="margin-top: 20px; font-size: 0.6rem; height: 20px;"></div>
     </div>
 
     <div id="cinematic-container">
-        <div id="speaker" style="font-size: 0.6rem; color: #666; margin-bottom: 20px; text-transform: uppercase;"></div>
-        <div id="dialogue-text" style="font-size: 0.8rem; line-height: 1.6; min-height: 120px; padding: 0 20px;"></div>
+        <div id="speaker" style="font-size: 0.5rem; color: #555; margin-bottom: 15px; text-transform: uppercase;"></div>
+        <div id="dialogue-text" style="font-size: 0.7rem; line-height: 1.8; min-height: 120px; padding: 0 30px;"></div>
         <div id="scene">
-            <div id="char-1" class="pixel-character"></div>
-            <div id="char-2" class="shark-sprite"></div>
+            <canvas id="crocoCanvas"></canvas>
+            <div id="shark-sprite" class="shark-sprite"></div>
         </div>
     </div>
 
     <div id="final-screen">
+        <div style="font-family: var(--modern-font); font-weight: 800; margin-bottom: 20px;">BIENVENUE CHEZ</div>
         <div class="big-ismac">ISMAC</div>
     </div>
 
     <button id="reset-btn" onclick="adminReset()">RESET</button>
 
     <script>
+        // FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyCLUNQhx8h0dHmiI3rqJ6QPuDju0Aa4zAo",
             authDomain: "trailer-90acb.firebaseapp.com",
             databaseURL: "https://trailer-90acb-default-rtdb.firebaseio.com",
             projectId: "trailer-90acb",
-            storageBucket: "trailer-90acb.firebasestorage.app",
-            messagingSenderId: "216077694665",
-            appId: "1:216077694665:web:e6090a278b656f7d2f7f18"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const SECRET_WORD = "ISMAC";
-
-        let phase = "game"; 
-        let currentLine = -1;
-        let isTyping = false;
-        let wordSolved = false;
-
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        function playBip() {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.05);
-        }
-
-        const script = [
-            { n: "crocodile", t: "Hey" },
-            { n: "requin", t: "?" },
-            { n: "crocodile", t: "Ils ont enfin réussi les 5 épreuves" },
-            { n: "requin", t: "Ah ouais ? Ils en ont mis du temps dis donc" },
-            { n: "crocodile", t: "Faut pas leur en vouloir, au moins ils auront appris des choses du genre :" },
-            { n: "crocodile", t: "Qu’il faut cliquer sur des robots pour les éliminer, que 1+1 = 2..." },
-            { n: "crocodile", t: "Ou bien qu’on peut survivre avec un lobe frontal en moins." },
-            { n: "requin", t: "Un lobe frontal… en moins… ? Qu’est ce que c’est que ces conneries ?" },
-            { n: "crocodile", t: "Bref… Avec du boulot on peut tout avoir" },
-            { n: "requin", t: "Et on repartira avec rien" },
-            { n: "crocodile", t: "Certes, mais je vais leur donner un p’tit cadeau : ISMAC" }
-        ];
-
-        db.ref("mot").on("value", (snapshot) => {
-            const data = snapshot.val() || {};
-            let display = "";
-            let foundCount = 0;
-            for (let i = 0; i < SECRET_WORD.length; i++) {
-                if (data[i] === true) { display += SECRET_WORD[i] + " "; foundCount++; }
-                else { display += "_ "; }
-            }
-            document.getElementById('word-display').innerText = display.trim();
-            if (foundCount === SECRET_WORD.length && !wordSolved) {
-                wordSolved = true;
-                setTimeout(startCinematic, 1000);
-            }
-        });
-
-        function handleInteraction() {
-            if (phase === "cinema" && !isTyping) nextLine();
-        }
-
-        function startCinematic() {
-            phase = "cinema";
-            document.getElementById('game-container').style.opacity = "0";
-            setTimeout(() => {
-                document.getElementById('game-container').style.display = "none";
-                document.getElementById('cinematic-container').style.display = "block";
-                setTimeout(() => document.getElementById('cinematic-container').style.opacity = "1", 100);
-                nextLine();
-            }, 1000);
-        }
-
-        function nextLine() {
-            currentLine++;
-            if (currentLine < script.length) {
-                const line = script[currentLine];
-                document.getElementById('speaker').textContent = line.n;
-                document.getElementById('char-1').style.opacity = (line.n === "crocodile") ? "1" : "0.2";
-                document.getElementById('char-2').style.opacity = (line.n === "requin") ? "1" : "0.2";
-                typeWriter(line.t);
-            } else {
-                showFinal();
-            }
-        }
-
-        function typeWriter(text) {
-            isTyping = true;
-            let i = 0;
-            const el = document.getElementById('dialogue-text');
-            el.textContent = "";
-            const interval = setInterval(() => {
-                el.textContent += text[i];
-                playBip();
-                i++;
-                if (i >= text.length) { clearInterval(interval); isTyping = false; }
-            }, 500 / text.length > 50 ? 50 : 30);
-        }
-
-        function showFinal() {
-            document.getElementById('cinematic-container').style.opacity = "0";
-            setTimeout(() => { document.getElementById('final-screen').style.display = "flex"; }, 1000);
-        }
-
-        document.getElementById('letter-input').addEventListener('input', (e) => {
-            if (localStorage.getItem('hasContributed')) return;
-            const char = e.target.value.toUpperCase();
-            if (SECRET_WORD.includes(char)) {
-                for (let i = 0; i < SECRET_WORD.length; i++) { if (SECRET_WORD[i] === char) db.ref("mot/" + i).set(true); }
-                localStorage.setItem('hasContributed', 'true');
-                e.target.disabled = true;
-            } else { e.target.value = ""; }
-        });
-
-        function adminReset() {
-            db.ref("mot").remove();
-            localStorage.clear();
-            location.reload();
-        }
-    </script>
-</body>
-</html>
