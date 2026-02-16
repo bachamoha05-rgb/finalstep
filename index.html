@@ -2,208 +2,273 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Forêt Mystère - ISMAC</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Abysse - ISMAC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@900&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
+        :root {
+            --pixel-font: 'Press Start 2P', cursive;
+            --modern-font: 'Poppins', sans-serif;
+        }
+
         body {
             margin: 0;
-            background: #0a1a0a;
-            color: white;
-            font-family: 'Press Start 2P', cursive;
-            overflow: hidden;
+            background: #000;
+            color: #fff;
+            font-family: var(--pixel-font);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            touch-action: none;
-        }
-
-        #game-board {
-            position: relative;
-            width: 90vw;
-            height: 60vh;
-            background: #1a331a; /* Couleur herbe sombre */
-            border: 4px solid #2d5a2d;
-            border-radius: 10px;
             overflow: hidden;
-            background-image: radial-gradient(#244224 1px, transparent 1px);
-            background-size: 20px 20px;
+            transition: background 2s ease;
         }
 
-        /* Personnage */
-        #player {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background: #5865F2; /* Bleu Discord */
-            border-radius: 5px;
-            transition: 0.1s linear;
-            z-index: 10;
+        /* --- INTERFACE DE JEU (PHASE 1) --- */
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 1s ease;
         }
 
-        /* Coffre */
-        #chest {
-            position: absolute;
-            width: 35px;
-            height: 30px;
-            background: #ffd700;
-            border: 3px solid #b8860b;
-            bottom: 20px;
-            right: 20px;
-            border-radius: 3px;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        #word-display { font-size: 1.8rem; margin-bottom: 40px; letter-spacing: 10px; }
+        input { 
+            background: transparent; border: 4px solid #fff; color: #fff; 
+            font-family: inherit; font-size: 1.5rem; width: 60px; 
+            text-align: center; padding: 15px; outline: none; text-transform: uppercase; 
         }
 
-        /* Arbres (Obstacles) */
-        .tree {
-            position: absolute;
-            background: #0d210d;
-            border-radius: 50%;
+        /* --- CINEMATIQUE (PHASE 2) --- */
+        #cinematic-container {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 1s ease;
         }
 
-        /* Écran de victoire */
-        #victory-screen {
+        #scene {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 180px;
+            margin-top: 40px;
+        }
+
+        .character { width: 100px; height: 100px; background: #fff; transition: opacity 0.5s; }
+        .croco { clip-path: polygon(0% 80%, 20% 70%, 45% 70%, 50% 30%, 75% 30%, 100% 50%, 100% 75%, 85% 85%, 60% 85%, 55% 100%, 15% 100%); }
+        .shark { clip-path: polygon(25% 100%, 45% 85%, 75% 85%, 100% 75%, 85% 55%, 75% 15%, 55% 55%, 0% 75%); }
+
+        /* --- FINAL (PHASE 3) --- */
+        #final-screen {
             display: none;
             position: fixed;
             inset: 0;
-            background: linear-gradient(-45deg, #5865F2, #e73c7e, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradient 5s ease infinite;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            background: linear-gradient(-45deg, #5865F2, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 10s ease infinite;
             z-index: 100;
         }
 
-        .ismac-title {
-            font-family: 'Poppins', sans-serif;
-            font-size: 5rem;
-            text-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            margin: 0;
+        .big-ismac { 
+            font-family: var(--modern-font); font-size: 5rem; letter-spacing: -2px;
+            background: rgba(255,255,255,0.2); padding: 10px 50px; border-radius: 100px;
+            backdrop-filter: blur(10px); box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
 
-        /* Contrôles tactiles pour mobile */
-        #controls {
-            display: grid;
-            grid-template-columns: repeat(3, 60px);
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .btn {
-            width: 60px;
-            height: 60px;
-            background: rgba(255,255,255,0.1);
-            border: 2px solid white;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            user-select: none;
-        }
-
-        @keyframes gradient {
+        @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
+
+        #reset-btn { position: fixed; bottom: 10px; background: transparent; border: none; color: #111; font-size: 0.5rem; cursor: pointer; }
     </style>
 </head>
-<body>
+<body onclick="handleInteraction()">
 
-    <div style="font-size: 0.6rem; margin-bottom: 10px;">TROUVE LE COFFRE ISMAC</div>
+    <div id="game-container">
+        <div style="font-size: 0.6rem; margin-bottom: 20px; color: #444;">MOT MYSTÈRE COLLECTIF</div>
+        <div id="word-display">_ _ _ _ _</div>
+        <input type="text" id="letter-input" maxlength="1" autocomplete="off">
+        <div id="game-message" style="margin-top: 20px; font-size: 0.7rem; height: 20px;"></div>
+    </div>
 
-    <div id="game-board">
-        <div id="player"></div>
-        <div id="chest"></div>
+    <div id="cinematic-container">
+        <div id="speaker" style="font-size: 0.6rem; color: #666; margin-bottom: 20px; text-transform: uppercase;"></div>
+        <div id="dialogue-text" style="font-size: 0.8rem; line-height: 1.6; min-height: 120px; padding: 0 20px;"></div>
+        <div id="scene">
+            <div id="sprite-croco" class="character croco"></div>
+            <div id="sprite-shark" class="character shark"></div>
         </div>
-
-    <div id="controls">
-        <div></div>
-        <div class="btn" id="up">▲</div>
-        <div></div>
-        <div class="btn" id="left">◀</div>
-        <div class="btn" id="down">▼</div>
-        <div class="btn" id="right">▶</div>
+        <div style="font-size: 0.4rem; color: #333; margin-top: 30px;">CLIQUE POUR AVANCER</div>
     </div>
 
-    <div id="victory-screen">
-        <div style="font-size: 0.8rem; margin-bottom: 20px;">VOUS AVEZ TROUVÉ</div>
-        <h1 class="ismac-title">ISMAC</h1>
-        <button onclick="location.reload()" style="margin-top: 30px; background: white; border: none; padding: 10px 20px; font-family: 'Press Start 2P'; font-size: 0.5rem; cursor: pointer;">REJOUER</button>
+    <div id="final-screen">
+        <div style="font-family: var(--modern-font); font-weight: 800; margin-bottom: 20px; letter-spacing: 2px;">BIENVENUE CHEZ</div>
+        <div class="big-ismac">ISMAC</div>
     </div>
+
+    <button id="reset-btn" onclick="adminReset()">RESET</button>
 
     <script>
-        const player = document.getElementById('player');
-        const chest = document.getElementById('chest');
-        const board = document.getElementById('game-board');
-        const victoryScreen = document.getElementById('victory-screen');
+        // CONFIGURATION FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLUNQhx8h0dHmiI3rqJ6QPuDju0Aa4zAo",
+            authDomain: "trailer-90acb.firebaseapp.com",
+            databaseURL: "https://trailer-90acb-default-rtdb.firebaseio.com",
+            projectId: "trailer-90acb",
+            storageBucket: "trailer-90acb.firebasestorage.app",
+            messagingSenderId: "216077694665",
+            appId: "1:216077694665:web:e6090a278b656f7d2f7f18"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const SECRET_WORD = "ISMAC";
 
-        let posX = 20;
-        let posY = 20;
-        const step = 15;
+        // VARIABLES D'ÉTAT
+        let phase = "game"; 
+        let currentLine = -1;
+        let isTyping = false;
+        let wordSolved = false;
 
-        // Génération d'obstacles (arbres)
-        for(let i=0; i<15; i++) {
-            const tree = document.createElement('div');
-            tree.className = 'tree';
-            const size = Math.random() * 40 + 30;
-            tree.style.width = size + 'px';
-            tree.style.height = size + 'px';
-            tree.style.left = Math.random() * 70 + 10 + '%';
-            tree.style.top = Math.random() * 70 + 10 + '%';
-            board.appendChild(tree);
-        }
+        // DIALOGUE
+        const script = [
+            { n: "crocodile", t: "Hey" },
+            { n: "requin", t: "?" },
+            { n: "crocodile", t: "Ils ont enfin réussi les 5 épreuves" },
+            { n: "requin", t: "Ah ouais ? Ils en ont mis du temps dis donc" },
+            { n: "crocodile", t: "Faut pas leur en vouloir, au moins ils auront appris des choses du genre :" },
+            { n: "crocodile", t: "Qu’il faut cliquer sur des robots pour les éliminer, que 1+1 = 2..." },
+            { n: "crocodile", t: "Ou bien qu’on peut survivre avec un lobe frontal en moins." },
+            { n: "requin", t: "Un lobe frontal… en moins… ? Qu’est ce que c’est que ces conneries ?" },
+            { n: "crocodile", t: "Bref… Avec du boulot on peut tout avoir" },
+            { n: "requin", t: "Et on repartira avec rien" },
+            { n: "crocodile", t: "Certes, mais je vais leur donner un p’tit cadeau : ISMAC" }
+        ];
 
-        function updatePosition() {
-            player.style.left = posX + 'px';
-            player.style.top = posY + 'px';
-            checkVictory();
-        }
+        // ÉCOUTE FIREBASE
+        db.ref("mot").on("value", (snapshot) => {
+            const data = snapshot.val() || {};
+            let display = "";
+            let foundCount = 0;
 
-        function move(dir) {
-            const boardRect = board.getBoundingClientRect();
-            if (dir === 'up' && posY > 0) posY -= step;
-            if (dir === 'down' && posY < boardRect.height - 35) posY += step;
-            if (dir === 'left' && posX > 0) posX -= step;
-            if (dir === 'right' && posX < boardRect.width - 35) posX += step;
-            updatePosition();
-        }
+            for (let i = 0; i < SECRET_WORD.length; i++) {
+                if (data[i] === true) {
+                    display += SECRET_WORD[i] + " ";
+                    foundCount++;
+                } else {
+                    display += "_ ";
+                }
+            }
+            document.getElementById('word-display').innerText = display.trim();
 
-        function checkVictory() {
-            const p = player.getBoundingClientRect();
-            const c = chest.getBoundingClientRect();
+            if (foundCount === SECRET_WORD.length && !wordSolved) {
+                wordSolved = true;
+                startCinematic();
+            }
+        });
 
-            // Collision simple
-            if (!(p.right < c.left || p.left > c.right || p.bottom < c.top || p.top > c.bottom)) {
-                victoryScreen.style.display = 'flex';
+        // GESTION DES CLICS
+        function handleInteraction() {
+            if (phase === "cinema" && !isTyping) {
+                nextLine();
             }
         }
 
-        // Contrôles Clavier
-        window.addEventListener('keydown', (e) => {
-            if (e.key === "ArrowUp") move('up');
-            if (e.key === "ArrowDown") move('down');
-            if (e.key === "ArrowLeft") move('left');
-            if (e.key === "ArrowRight") move('right');
+        // LANCER LA CINÉMATIQUE
+        function startCinematic() {
+            phase = "cinema";
+            document.getElementById('game-container').style.opacity = "0";
+            setTimeout(() => {
+                document.getElementById('game-container').style.display = "none";
+                const cin = document.getElementById('cinematic-container');
+                cin.style.display = "block";
+                setTimeout(() => cin.style.opacity = "1", 100);
+                nextLine();
+            }, 1000);
+        }
+
+        // LIGNE SUIVANTE DIALOGUE
+        function nextLine() {
+            currentLine++;
+            if (currentLine < script.length) {
+                const line = script[currentLine];
+                document.getElementById('speaker').textContent = line.n;
+                document.getElementById('sprite-croco').style.opacity = (line.n === "crocodile") ? "1" : "0.2";
+                document.getElementById('sprite-shark').style.opacity = (line.n === "requin") ? "1" : "0.2";
+                typeWriter(line.t);
+            } else {
+                showFinal();
+            }
+        }
+
+        function typeWriter(text) {
+            isTyping = true;
+            let i = 0;
+            const el = document.getElementById('dialogue-text');
+            el.textContent = "";
+            const interval = setInterval(() => {
+                el.textContent += text[i];
+                i++;
+                if (i >= text.length) {
+                    clearInterval(interval);
+                    isTyping = false;
+                }
+            }, 40);
+        }
+
+        // ÉCRAN FINAL
+        function showFinal() {
+            phase = "final";
+            document.getElementById('cinematic-container').style.opacity = "0";
+            setTimeout(() => {
+                document.getElementById('final-screen').style.display = "flex";
+            }, 1000);
+        }
+
+        // LOGIQUE INPUT
+        document.getElementById('letter-input').addEventListener('input', (e) => {
+            if (localStorage.getItem('hasContributed')) return;
+            const char = e.target.value.toUpperCase();
+            if (!char) return;
+
+            if (SECRET_WORD.includes(char)) {
+                for (let i = 0; i < SECRET_WORD.length; i++) {
+                    if (SECRET_WORD[i] === char) db.ref("mot/" + i).set(true);
+                }
+                localStorage.setItem('hasContributed', 'true');
+                e.target.disabled = true;
+                document.getElementById('game-message').innerText = "BIEN JOUÉ !";
+            } else {
+                document.getElementById('game-message').innerText = "ERREUR";
+                e.target.value = "";
+                setTimeout(() => document.getElementById('game-message').innerText = "", 1000);
+            }
         });
 
-        // Contrôles Tactiles
-        document.getElementById('up').ontouchstart = (e) => { e.preventDefault(); move('up'); };
-        document.getElementById('down').ontouchstart = (e) => { e.preventDefault(); move('down'); };
-        document.getElementById('left').ontouchstart = (e) => { e.preventDefault(); move('left'); };
-        document.getElementById('right').ontouchstart = (e) => { e.preventDefault(); move('right'); };
-        
-        // Support clic souris pour test PC
-        document.getElementById('up').onclick = () => move('up');
-        document.getElementById('down').onclick = () => move('down');
-        document.getElementById('left').onclick = () => move('left');
-        document.getElementById('right').onclick = () => move('right');
+        function adminReset() {
+            if(confirm("Reset tout ?")) {
+                db.ref("mot").remove();
+                localStorage.clear();
+                location.reload();
+            }
+        }
 
-        updatePosition();
+        // Bloquer l'input si déjà joué
+        if (localStorage.getItem('hasContributed')) {
+            document.getElementById('letter-input').disabled = true;
+            document.getElementById('letter-input').placeholder = "✔";
+        }
     </script>
 </body>
 </html>
