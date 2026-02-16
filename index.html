@@ -37,11 +37,27 @@
         }
 
         #word-display { font-size: 1.8rem; margin-bottom: 40px; letter-spacing: 10px; }
+        
         input { 
             background: transparent; border: 4px solid #fff; color: #fff; 
             font-family: inherit; font-size: 1.5rem; width: 65px; 
             text-align: center; padding: 15px; outline: none; text-transform: uppercase; 
+            margin-bottom: 20px;
         }
+
+        #validate-btn {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-family: var(--pixel-font);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        #validate-btn:active { transform: scale(0.95); }
+        #validate-btn:disabled { background: #444; color: #888; cursor: not-allowed; }
 
         /* --- CINEMATIQUE --- */
         #cinematic-container {
@@ -102,6 +118,7 @@
         <div style="font-size: 0.5rem; margin-bottom: 20px; color: #444;">DÉCRYPTEZ LE CADEAU</div>
         <div id="word-display">_ _ _ _ _</div>
         <input type="text" id="letter-input" maxlength="1" autocomplete="off" autofocus>
+        <button id="validate-btn">VALIDER</button>
         <div id="game-message" style="margin-top: 20px; font-size: 0.6rem; height: 20px;"></div>
     </div>
 
@@ -122,7 +139,6 @@
     <button id="reset-btn" onclick="adminReset()">RESET</button>
 
     <script>
-        // FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyCLUNQhx8h0dHmiI3rqJ6QPuDju0Aa4zAo",
             authDomain: "trailer-90acb.firebaseapp.com",
@@ -136,7 +152,6 @@
         const db = firebase.database();
         const SECRET_WORD = "ISMAC";
 
-        // AUDIO (Bip rétro)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playTypeSound() {
             const osc = audioCtx.createOscillator();
@@ -151,30 +166,15 @@
             osc.stop(audioCtx.currentTime + 0.05);
         }
 
-        // DESSIN DU PERSONNAGE PIXEL (Canvas)
         const canvas = document.getElementById('crocoCanvas');
         const ctx = canvas.getContext('2d');
-        const sprite = [
-            [0,0,0,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,0],
-            [0,0,1,1,1,1,1,1,1],[0,0,0,1,1,1,1,1,0],[0,0,0,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,0],[0,0,0,1,1,1,1,1,1],[0,0,0,1,1,1,1,1,0],
-            [0,0,1,1,1,1,0,0,0],[0,0,1,1,1,1,0,0,0]
-        ];
+        const sprite = [[0,0,0,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1],[0,0,0,1,1,1,1,1,0],[0,0,0,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,0],[0,0,0,1,1,1,1,1,1],[0,0,0,1,1,1,1,1,0],[0,0,1,1,1,1,0,0,0],[0,0,1,1,1,1,0,0,0]];
         const pSize = 10;
         canvas.width = sprite[0].length * pSize;
         canvas.height = sprite.length * pSize;
-
-        function drawSprite() {
-            ctx.fillStyle = "#FFFFFF";
-            for (let y = 0; y < sprite.length; y++) {
-                for (let x = 0; x < sprite[y].length; x++) {
-                    if (sprite[y][x] === 1) ctx.fillRect(x * pSize, y * pSize, pSize, pSize);
-                }
-            }
-        }
+        function drawSprite() { ctx.fillStyle = "#FFFFFF"; for (let y = 0; y < sprite.length; y++) { for (let x = 0; x < sprite[y].length; x++) { if (sprite[y][x] === 1) ctx.fillRect(x * pSize, y * pSize, pSize, pSize); } } }
         drawSprite();
 
-        // LOGIQUE DIALOGUE
         const script = [
             { n: "crocodile", t: "Hey" },
             { n: "requin", t: "?" },
@@ -249,22 +249,30 @@
             setTimeout(() => document.getElementById('final-screen').style.display = "flex", 1000);
         }
 
-        document.getElementById('letter-input').addEventListener('input', (e) => {
+        const validateAction = () => {
             if (localStorage.getItem('hasContributed')) return;
-            const char = e.target.value.toUpperCase();
+            const input = document.getElementById('letter-input');
+            const char = input.value.toUpperCase();
             if (SECRET_WORD.includes(char)) {
                 for (let i = 0; i < SECRET_WORD.length; i++) if (SECRET_WORD[i] === char) db.ref("mot/" + i).set(true);
                 localStorage.setItem('hasContributed', 'true');
-                e.target.disabled = true;
+                input.disabled = true;
+                document.getElementById('validate-btn').disabled = true;
             } else {
                 document.getElementById('game-message').innerText = "ERREUR";
-                e.target.value = "";
+                input.value = "";
                 setTimeout(() => document.getElementById('game-message').innerText = "", 1000);
             }
-        });
+        };
+
+        document.getElementById('validate-btn').onclick = validateAction;
+        document.getElementById('letter-input').onkeypress = (e) => { if(e.key === "Enter") validateAction(); };
 
         function adminReset() { if(confirm("Reset?")) { db.ref("mot").remove(); localStorage.clear(); location.reload(); } }
-        if (localStorage.getItem('hasContributed')) { document.getElementById('letter-input').disabled = true; document.getElementById('letter-input').placeholder = "✔"; }
+        if (localStorage.getItem('hasContributed')) { 
+            document.getElementById('letter-input').disabled = true; 
+            document.getElementById('validate-btn').disabled = true;
+        }
     </script>
 </body>
 </html>
