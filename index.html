@@ -185,7 +185,6 @@
             if(currentLine < script.length) {
                 const l = script[currentLine];
                 document.getElementById('speaker').textContent = l.n;
-                // Logique d'opacité mise à jour pour les nouvelles positions
                 document.getElementById('crocoCanvas').style.opacity = (l.n==="gamemaster")?1:0.2;
                 document.getElementById('sharkCanvas').style.opacity = (l.n==="son frère")?1:0.2;
                 typeW(l.t);
