@@ -38,8 +38,8 @@
     <div id="cinematic-container">
         <div id="speaker" style="font-size: 0.5rem; color: #555; text-transform: uppercase; letter-spacing: 3px;"></div>
         <div id="scene">
-            <canvas id="crocoCanvas"></canvas>
             <canvas id="sharkCanvas"></canvas>
+            <canvas id="crocoCanvas"></canvas>
         </div>
         <div id="dialogue-text"></div>
         <div style="font-size: 0.4rem; color: #333; margin-top: 10px;">( CLIQUE POUR CONTINUER )</div>
@@ -185,6 +185,7 @@
             if(currentLine < script.length) {
                 const l = script[currentLine];
                 document.getElementById('speaker').textContent = l.n;
+                // Logique d'opacité mise à jour pour les nouvelles positions
                 document.getElementById('crocoCanvas').style.opacity = (l.n==="gamemaster")?1:0.2;
                 document.getElementById('sharkCanvas').style.opacity = (l.n==="son frère")?1:0.2;
                 typeW(l.t);
