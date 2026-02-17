@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>L'Abysse | ISMAC Project</title>
+    <title>L'Abysse</title>
     <meta name="description" content="Une expérience interactive mystérieuse. Récupérez le cadeau.">
     <meta property="og:title" content="L'Abysse - ISMAC">
     <meta property="og:description" content="Saurez-vous décoder le message des profondeurs ?">
@@ -233,17 +233,17 @@
 
         // --- LOGIQUE GÉNÉRALE ---
         const script = [
-            {n:"crocodile",t:"Hey"},
-            {n:"requin",t:"?"},
-            {n:"crocodile",t:"Ils ont enfin réussi les 5 épreuves"},
-            {n:"requin",t:"Ah ouais ? Ils en ont mis du temps dis donc"},
-            {n:"crocodile",t:"Faut pas leur en vouloir, au moins ils auront appris des choses du genre :"},
-            {n:"crocodile",t:"Qu’il faut cliquer sur des robots pour les éliminer, que 1+1 = 2..."},
-            {n:"crocodile",t:"Ou bien qu’on peut survivre avec un lobe frontal en moins."},
-            {n:"requin",t:"Un lobe frontal… en moins… ? Qu’est ce que c’est que ces conneries ?"},
-            {n:"crocodile",t:"Bref… Avec du boulot on peut tout avoir"},
-            {n:"requin",t:"Et on repartira avec rien"},
-            {n:"crocodile",t:"Certes, mais je vais leur donner un p’tit cadeau : ISMAC"}
+            {n:"gamemaster",t:"Hey"},
+            {n:"son frère",t:"?"},
+            {n:"gamemaster",t:"Ils ont enfin réussi les 5 épreuves."},
+            {n:"son frère",t:"Ah ouais ? Ils en ont mis du temps dis donc."},
+            {n:"gamemaster",t:"Faut pas leur en vouloir, au moins ils auront appris des choses du genre :"},
+            {n:"gamemaster",t:"Qu’il faut cliquer sur des robots pour les éliminer, que 1+1 = 2..."},
+            {n:"gamemaster",t:"Ou bien qu’on peut survivre avec un lobe frontal en moins."},
+            {n:"son frère",t:"Un lobe frontal… en moins… ? Qu’est ce que c’est que ces conneries ?"},
+            {n:"gamemaster",t:"Bref… Avec du boulot on peut tout avoir"},
+            {n:"son frère",t:"Mais au finale on ne repartira avec rien."},
+            {n:"gamemaster",t:"Certes, mais je vais leur donner un p’tit cadeau qu'ils garderont toute leurs vie : ISMAC."}
         ];
 
         let phase = "game"; let currentLine = -1; let isTyping = false; let solved = false;
@@ -346,4 +346,5 @@
         }
     </script>
 </body>
+
 </html
