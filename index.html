@@ -15,12 +15,24 @@
         input { background: transparent; border: 4px solid #fff; color: #fff; font-family: inherit; font-size: 1.5rem; width: 70px; text-align: center; padding: 15px; outline: none; text-transform: uppercase; margin-bottom: 20px; }
         #validate-btn { background: #fff; color: #000; border: none; padding: 12px 25px; font-family: var(--pixel-font); font-size: 0.7rem; cursor: pointer; }
         #cinematic-container { display: none; width: 90%; max-width: 800px; text-align: center; opacity: 0; transition: opacity 1s ease; }
-        #scene { display: flex; justify-content: space-around; align-items: flex-end; height: 220px; margin-top: 20px; border-bottom: 2px solid #222; padding-bottom: 10px; }
         
-        /* Animation et mise en face à face */
+        #scene { 
+            display: flex; 
+            justify-content: space-between; /* Écarte les personnages aux extrémités */
+            align-items: flex-end; 
+            height: 220px; 
+            margin-top: 20px; 
+            border-bottom: 2px solid #222; 
+            padding: 0 50px 10px 50px; 
+        }
+
         canvas { image-rendering: pixelated; transition: opacity 0.5s; }
-        #sharkCanvas { transform: scaleX(-1); } /* MIROIR : Ton perso regarde maintenant à droite */
-        #crocoCanvas { transform: scaleX(-1); } /* Optionnel : Le croco regarde à gauche */
+        
+        /* Ton perso à GAUCHE regarde vers la DROITE */
+        #sharkCanvas { transform: scaleX(1); } 
+        
+        /* Le crocodile à DROITE regarde vers la GAUCHE */
+        #crocoCanvas { transform: scaleX(-1); } 
 
         #dialogue-text { font-size: 0.65rem; line-height: 1.8; min-height: 100px; padding: 20px; background: rgba(255,255,255,0.05); margin-top: 20px; }
         #final-screen { display: none; position: fixed; inset: 0; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(-45deg, #121212, #1a1a1a, #000, #222); background-size: 400% 400%; animation: gradientBG 15s ease infinite; z-index: 100; }
