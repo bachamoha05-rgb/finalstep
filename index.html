@@ -28,11 +28,11 @@
 
         canvas { image-rendering: pixelated; transition: opacity 0.5s; }
         
-        /* Son Frère (Binaire) à gauche, regarde à droite */
-        #sharkCanvas { transform: scaleX(1); } 
+        /* Son Frère (Binaire) à gauche */
+        #sharkCanvas { transform: none; } 
         
-        /* Gamemaster (Croco) à droite, regarde à gauche pour lui faire face */
-        #crocoCanvas { transform: scaleX(-1); } 
+        /* Gamemaster (Croco) à droite - EFFET MIROIR RETIRÉ */
+        #crocoCanvas { transform: none; } 
 
         #dialogue-text { font-size: 0.65rem; line-height: 1.8; min-height: 100px; padding: 20px; background: rgba(255,255,255,0.05); margin-top: 20px; }
         #final-screen { display: none; position: fixed; inset: 0; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(-45deg, #121212, #1a1a1a, #000, #222); background-size: 400% 400%; animation: gradientBG 15s ease infinite; z-index: 100; }
@@ -97,7 +97,6 @@
             });
         }
 
-        // Sprite 1 : SON FRERE (Ton dessin binaire)
         const sharkData = `1111111111111111111111111111111
 1111111111111111111111111111111
 1111111111000001111111111111111
@@ -118,7 +117,6 @@
 1111111100000010000001111111111
 1111111111111110000001111111111`;
 
-        // Sprite 2 : GAMEMASTER (Le Crocodile)
         const crocoData = `111111111111111111111111111111111111
 111111111111111111111111111111111111
 111111111111000000001111111111111111
@@ -204,7 +202,6 @@
             if(currentLine < script.length) {
                 const l = script[currentLine];
                 document.getElementById('speaker').textContent = l.n;
-                // Ajustement de l'opacité selon qui parle :
                 document.getElementById('sharkCanvas').style.opacity = (l.n==="son frère")?1:0.2;
                 document.getElementById('crocoCanvas').style.opacity = (l.n==="gamemaster")?1:0.2;
                 typeW(l.t);
