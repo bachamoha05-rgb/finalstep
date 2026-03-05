@@ -18,12 +18,12 @@
         #scene { display:flex; justify-content:space-around; align-items:flex-end; height:220px; margin-top:20px; border-bottom:2px solid #222; padding-bottom:10px; }
         canvas { image-rendering:pixelated; transition:opacity 0.5s; }
         #dialogue-text { font-size:0.65rem; line-height:1.8; min-height:100px; padding:20px; background:rgba(255,255,255,0.05); margin-top:20px; }
-        #final-screen { display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:#000; z-index:100; overflow:hidden; }
+        #final-screen { display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:#f5e04a; z-index:100; overflow:hidden; }
         #ismac-bg { position:absolute; inset:0; background:#f5e04a; opacity:0; transition:opacity 0.8s ease; }
         #pixel-grid { position:absolute; inset:0; display:grid; pointer-events:none; }
         .px-cell { background:#000; transition:opacity 0.45s ease; }
         #logo-wrapper { position:relative; z-index:10; opacity:0; transform:scale(0.75); transition:opacity 0.9s ease, transform 0.9s cubic-bezier(0.34,1.56,0.64,1); }
-        #logo-wrapper img { max-width:min(580px,88vw); display:block; mix-blend-mode:multiply; }
+        #logo-wrapper img { max-width:min(580px,88vw); display:block; }
         #logo-wrapper.visible { opacity:1; transform:scale(1); }
         @keyframes float { 0%,100%{transform:scale(1) translateY(0)} 50%{transform:scale(1) translateY(-18px)} }
         #logo-wrapper.floating { animation:float 3.5s ease-in-out infinite; }
